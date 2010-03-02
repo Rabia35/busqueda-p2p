@@ -1,1 +1,1 @@
-java -jar Search.jar -gui hola:Agentes.HolaAgente
+java -jar JadePruebas.jar -gui PC01:Chat.ChatAgent PC02:Chat.ChatAgent
