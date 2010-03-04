@@ -1,9 +1,5 @@
-package Chat;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+package ChatGUI;
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -15,29 +11,38 @@ import jade.domain.FIPAAgentManagement.SearchConstraints;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
-import jade.proto.SubscriptionInitiator;
 
 /**
  *
  * @author almunoz
  */
-public class ChatAgent extends Agent {
+public class ChatGUIAgent extends Agent {
     private String serviceName;
     private String serviceType;
     // Para la busqueda
     private AID[] agents;
-    private AID[] subscribeAgents;
-        
+    // Para la Interfaz Grafica
+    public ChatGUI gui;
+
     @Override
     protected void setup() {
+        // Argumentos
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+            gui = (ChatGUI) args[0];
+        } else {
+            doDelete();
+        }
         serviceName = "jade-chat";
         serviceType = "chat";
         System.out.println("El agente " + this.getName() + " se ha iniciado.");
+        // Permite la comunicacion O2A: Object to Agent
+        setEnabledO2ACommunication(true, 0);
         
         addBehaviour(new RegisterServiceBehaviour());
-        addBehaviour(new ReceiveBehaviour());
+        addBehaviour(new SendO2ABehaviour());
+        addBehaviour(new ReceiveO2ABehaviour());
         
-        addBehaviour(new SendBehaviour("Hola soy " + this.getLocalName()));
     }
 
     @Override
@@ -98,36 +103,6 @@ public class ChatAgent extends Agent {
         return null;
     }
 
-    private void subscribeService() {
-        // Build the description used as template for the subscription
-        DFAgentDescription templateDfad = new DFAgentDescription();
-        ServiceDescription templateSd = new ServiceDescription();
-        templateSd.setType(serviceType);
-        templateDfad.addServices(templateSd);
-
-        SearchConstraints sc = new SearchConstraints();
-        sc.setMaxResults(new Long(-1));
-
-        addBehaviour(new SubscriptionInitiator(this, DFService.createSubscriptionMessage(this, getDefaultDF(), templateDfad, sc)) {
-
-            @Override
-            protected void handleInform(ACLMessage inform) {
-                System.out.println("Agente " + myAgent.getLocalName() + ": Notificacion recibida del Agente DF");
-                try {
-                    DFAgentDescription[] results = DFService.decodeNotification(inform.getContent());
-                    if (results.length > 0) {
-                        subscribeAgents = new AID[results.length];
-                        for (int i = 0; i < results.length; ++i) {
-                            subscribeAgents[i] = results[i].getName();
-                        }
-                    }
-                } catch (FIPAException fex) {
-                    System.out.println("FIPAException: " + fex.getMessage());
-                }
-            }
-        });
-    }
-
     public class RegisterServiceBehaviour extends OneShotBehaviour {
 
         @Override
@@ -155,34 +130,6 @@ public class ChatAgent extends Agent {
         
     }
 
-    public class SubscribeBehaviour extends OneShotBehaviour {
-
-        @Override
-        public void action() {
-            subscribeService();
-        }
-
-    }
-
-    public class SendAgentBehaviour extends OneShotBehaviour {
-        private String mensaje;
-        private AID destino;
-
-        public SendAgentBehaviour(String mensaje, AID agent) {
-            this.mensaje = mensaje;
-            this.destino = agent;
-        }
-
-        @Override
-        public void action() {
-            ACLMessage acl = new ACLMessage(ACLMessage.INFORM);
-            acl.addReceiver(destino);
-            acl.setContent(mensaje);
-            send(acl);
-        }
-
-    }
-
     public class SendBehaviour extends OneShotBehaviour {
         private String mensaje;
 
@@ -208,7 +155,23 @@ public class ChatAgent extends Agent {
 
     }
 
-    public class ReceiveBehaviour extends CyclicBehaviour {
+    public class SendO2ABehaviour extends CyclicBehaviour {
+        
+        @Override
+        public void action() {
+            String mensaje = (String) getO2AObject();
+            if (mensaje != null) {
+                System.out.println(myAgent.getLocalName() + ": " + mensaje);
+                addBehaviour(new SendBehaviour(mensaje));
+            }
+            else {
+                block();
+            }
+        }
+
+    }
+
+    public class ReceiveO2ABehaviour extends CyclicBehaviour {
 
         @Override
         public void action() {
@@ -218,7 +181,8 @@ public class ChatAgent extends Agent {
             // Para recibir el mensaje
             ACLMessage acl = receive();
             if (acl != null) {
-                System.out.println(myAgent.getLocalName() + " -> " + acl.getSender().getLocalName() + " dice: " + acl.getContent());
+                System.out.println(acl.getSender().getLocalName() + " dice: " + acl.getContent());
+                gui.recibirMensaje(acl.getSender().getLocalName() + " dice: " + acl.getContent());
             }
             else {
                 block();
