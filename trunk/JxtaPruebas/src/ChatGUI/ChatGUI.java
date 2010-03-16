@@ -6,39 +6,26 @@
 
 package ChatGUI;
 
-import java.io.IOException;
-import net.jxta.exception.PeerGroupException;
-import net.jxta.platform.NetworkManager;
-
 /**
  *
  * @author almunoz
  */
 public class ChatGUI extends javax.swing.JFrame {
-    private NetworkManager manager;
-    private ChatGUIPeer peer;
+    private ChatPeer peer;
         
     /** Creates new form ChatGUI */
     public ChatGUI() {
         initComponents();
+        this.peer = new ChatPeer();
         iniciarJXTA();
     }
 
     private void iniciarJXTA() {
-        try {
-            manager = new NetworkManager(NetworkManager.ConfigMode.ADHOC, "PeerChat01");
-            System.out.println("Iniciando Red JXTA");
-            manager.startNetwork();
-            System.out.println("Red JXTA Iniciada");
-        } catch (IOException ioex) {
-            System.out.println("IOException: " + ioex.getMessage());
-        } catch (PeerGroupException pgex) {
-            System.out.println("PGException: " + pgex.getMessage());
-        }
+        peer.iniciarJXTA();
     }
 
     private void terminarJXTA() {
-        manager.stopNetwork();
+        peer.terminarJXTA();
     }
 
     /** This method is called from within the constructor to
