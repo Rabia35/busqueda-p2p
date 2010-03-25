@@ -160,6 +160,7 @@ public class ChatGUI extends javax.swing.JFrame {
                 gui.setVisible(true);
             }
         });
+        //gui.peer.buscarServicio();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
