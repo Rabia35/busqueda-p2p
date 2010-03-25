@@ -1,1 +1,0 @@
-java -jar JadePruebas.jar -gui PC01:Chat.ChatAgent PC02:Chat.ChatAgent
