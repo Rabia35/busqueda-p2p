@@ -12,15 +12,19 @@ package ChatGUI;
  */
 public class ChatGUI extends javax.swing.JFrame {
     private ChatPeer peer;
+    public String[] argumentos;
         
     /** Creates new form ChatGUI */
     public ChatGUI() {
         initComponents();
-        this.peer = new ChatPeer();
         iniciarJXTA();
     }
 
     private void iniciarJXTA() {
+        peer = new ChatPeer(this);
+        if (argumentos != null && argumentos.length > 0) {
+            peer.setPuerto(Integer.parseInt(argumentos[0]));
+        }
         peer.iniciarJXTA();
     }
 
@@ -130,7 +134,8 @@ public class ChatGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonEnviarActionPerformed
 
     private void enviarMensaje() {
-        
+        String mensaje = jTextFieldMensaje.getText().trim();
+        peer.enviarMensaje(mensaje);
     }
 
     public void recibirMensaje(final String mensaje) {
@@ -146,10 +151,13 @@ public class ChatGUI extends javax.swing.JFrame {
     * @param args the command line arguments
     */
     public static void main(String args[]) {
+        final ChatGUI gui = new ChatGUI();
+        gui.argumentos = args;
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new ChatGUI().setVisible(true);
+                //new ChatGUI().setVisible(true);
+                gui.setVisible(true);
             }
         });
     }
