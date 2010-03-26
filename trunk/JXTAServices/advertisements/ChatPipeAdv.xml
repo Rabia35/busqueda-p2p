@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE jxta:PipeAdvertisement>
+<jxta:PipeAdvertisement xml:space="default" xmlns:jxta="http://jxta.org">
+	<Id>
+		urn:jxta:uuid-59616261646162614E504720503250332365D83C582A45B4B1DABA994BD4675D04
+	</Id>
+	<Type>
+		JxtaPropagate
+	</Type>
+	<Name>
+		Pipe Chat
+	</Name>
+	<Desc>
+		JXTA Chat Pipe
+	</Desc>
+</jxta:PipeAdvertisement>
