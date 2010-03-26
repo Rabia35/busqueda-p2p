@@ -1,5 +1,5 @@
 
-package ChatGUI;
+package ChatServicePropagate;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

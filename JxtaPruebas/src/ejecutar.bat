@@ -1,1 +1,1 @@
-java -cp .;lib/jxta.jar;lib/bcprov-jdk14.jar;lib/javax.servlet.jar;lib/org.mortbay.jetty.jar ChatGUI.ChatGUI 9702
+java -cp .;lib/jxta.jar;lib/bcprov-jdk14.jar;lib/javax.servlet.jar;lib/org.mortbay.jetty.jar ChatService.ChatGUI 9702
