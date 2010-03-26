@@ -1,10 +1,11 @@
 
-package ChatGUI;
+package ChatService;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.Vector;
 import javax.swing.Timer;
 import net.jxta.discovery.DiscoveryEvent;
 import net.jxta.discovery.DiscoveryListener;
@@ -36,7 +37,7 @@ public class ChatCliente {
     // Advertisement para el pipe de los mensajes
     private PipeAdvertisement pipeAdvertisement;
     // Canales de Comunicacion (Pipes)
-    private OutputPipe outputPipe;
+    private Vector<OutputPipe> outputPipes;
     private long tiempoEspera;
     // Timer, para buscar advertisements remotos cada cierto tiempo
     private static int TIEMPO = 30000; // 30 segundos
@@ -50,7 +51,7 @@ public class ChatCliente {
         this.discoveryService = this.netPeerGroup.getDiscoveryService();
         this.pipeService = this.netPeerGroup.getPipeService();
         this.pipeAdvertisement = null;
-        this.outputPipe = null;
+        this.outputPipes = new Vector<OutputPipe>(0,10);
         this.tiempoEspera = 5000L; // 5 segundos
         this.timerBusqueda = new Timer(TIEMPO, new TimerBusquedaListener());
     }
@@ -58,8 +59,6 @@ public class ChatCliente {
     public OutputPipe crearOuputPipe(PipeAdvertisement advertisement) throws IOException {
         OutputPipe pipe = null;
         pipe = pipeService.createOutputPipe(advertisement, tiempoEspera);
-        System.out.println("Advertisement del OutputPipe Creado");
-        System.out.println(advertisement.toString());
         return pipe;
     }
 
@@ -71,46 +70,69 @@ public class ChatCliente {
     }
 
     public void buscarServicioChat() throws IOException {
-        System.out.println("Buscando Servicio...\n");
+        this.outputPipes = new Vector<OutputPipe>(0, 10);
         Enumeration<Advertisement> en = discoveryService.getLocalAdvertisements(DiscoveryService.ADV, nombreBusqueda, nombreServicio);
-        if ((en != null) && en.hasMoreElements()) {
-            ModuleSpecAdvertisement moduleSpec = (ModuleSpecAdvertisement) en.nextElement();
-            pipeAdvertisement = moduleSpec.getPipeAdvertisement();
-            // Crear el canal de comunicacion (outputPipe)
-            outputPipe = crearOuputPipe(pipeAdvertisement);
+        if (en != null) {
+            while (en.hasMoreElements()) {
+                ModuleSpecAdvertisement moduleSpec = (ModuleSpecAdvertisement) en.nextElement();
+                pipeAdvertisement = moduleSpec.getPipeAdvertisement();
+                // Crear el canal de comunicacion (outputPipe) y agregarlo al vector
+                OutputPipe outputPipe = crearOuputPipe(pipeAdvertisement);
+                if (outputPipe != null && !outputPipes.contains(outputPipe)) {
+                    outputPipes.add(outputPipe);                    
+                }
+            }
         }
         // Busca si otros peers han publicado advertisements
         BusquedaListener busquedaListener = new BusquedaListener();
         String peerId = null; // Busca todos los peers
         int numeroAdvertisements = 1;
         discoveryService.getRemoteAdvertisements(peerId, DiscoveryService.ADV, nombreBusqueda, nombreServicio, numeroAdvertisements, busquedaListener);
+        mostrarOutputPipeAdvs();
+    }
+
+    public void mostrarOutputPipeAdvs() {
+        chatPeer.recibirMensaje("======================");
+        chatPeer.recibirMensaje("OutPipe Advertisements\n");
+        for (OutputPipe outputPipe : outputPipes) {
+            Advertisement adv = outputPipe.getAdvertisement();
+            chatPeer.recibirMensaje(adv.toString());
+        }
+        chatPeer.recibirMensaje("======================");
     }
 
     public void enviarMensaje(String mensaje) throws IOException {
         Message message = new Message();
         StringMessageElement mensajeElement = new StringMessageElement("mensaje", mensaje, null);
         message.addMessageElement(mensajeElement);
-        if (outputPipe != null) {
-            outputPipe.send(message);
-        } else {
-            chatPeer.recibirMensaje("El OutputPipe es null, no se puede enviar el mensaje");
+        for (OutputPipe outputPipe : outputPipes) {
+            if (outputPipe != null) {
+                outputPipe.send(message);
+            } else {
+                chatPeer.recibirMensaje("El OutputPipe es null, no se puede enviar el mensaje");
+            }
         }
     }
 
     public class BusquedaListener implements DiscoveryListener {
         @Override
         public void discoveryEvent(DiscoveryEvent devent) {
-            System.out.println("Se encontraron Advertisement remotos\n");
+            //chatPeer.recibirMensaje("Se encontraron Advertisement remotos\n");
             DiscoveryResponseMsg message = devent.getResponse();
             Enumeration<Advertisement> responses = message.getAdvertisements();
-            if ( (responses != null) && responses.hasMoreElements()) {
-                try {
-                    ModuleSpecAdvertisement moduleSpec = (ModuleSpecAdvertisement) responses.nextElement();
-                    pipeAdvertisement = moduleSpec.getPipeAdvertisement();
-                    // Crear el canal de comunicacion (outputPipe)
-                    outputPipe = crearOuputPipe(pipeAdvertisement);
-                } catch (IOException ioex) {
-                    chatPeer.recibirMensaje("IOException: " + ioex.getMessage());
+            if ( responses != null) {
+                while (responses.hasMoreElements()) {
+                    try {
+                        ModuleSpecAdvertisement moduleSpec = (ModuleSpecAdvertisement) responses.nextElement();
+                        pipeAdvertisement = moduleSpec.getPipeAdvertisement();
+                        // Crear el canal de comunicacion (outputPipe) y agregarlo al vector
+                        OutputPipe outputPipe = crearOuputPipe(pipeAdvertisement);
+                        if (outputPipe != null && !outputPipes.contains(outputPipe)) {
+                            outputPipes.add(outputPipe);
+                        }
+                    } catch (IOException ioex) {
+                        chatPeer.recibirMensaje("IOException: " + ioex.getMessage());
+                    }
                 }
             }
         }

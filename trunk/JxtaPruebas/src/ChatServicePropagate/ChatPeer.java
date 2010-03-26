@@ -1,8 +1,9 @@
 
-package ChatGUI;
+package ChatServicePropagate;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.InetAddress;
 import net.jxta.document.Advertisement;
 import net.jxta.document.MimeMediaType;
 import net.jxta.document.StructuredTextDocument;
@@ -22,7 +23,7 @@ public class ChatPeer {
     // Red
     private NetworkManager manager;
     private NetworkConfigurator configurator;
-    // Servidor y CLiente de Chat
+    // Servidor y Cliente de Chat
     private ChatServidor servidor;
     private ChatCliente cliente;
     // Puerto TCP
@@ -51,16 +52,23 @@ public class ChatPeer {
     
     public void iniciarJXTA() {
         try {
-            //manager = new NetworkManager(NetworkManager.ConfigMode.RENDEZVOUS, "jxta-net-chat");
-            /*configurator = manager.getConfigurator();
-            configurator.setName("chat" + peerNumber);
-            configurator.setPassword("chat-password");
-            configurator.setTcpPort(puerto);
-            configurator.setMode(NetworkConfigurator.RELAY_OFF);*/
-            //manager.startNetwork();
+            // Configurar el Nodo dentro de la Red JXTA
+            manager = new NetworkManager(NetworkManager.ConfigMode.RENDEZVOUS, "chat-nodo");
+            configurator = manager.getConfigurator();
+            // Configuracion TCP
+            configurator.setTcpEnabled(true);
+            configurator.setTcpPort(puertoTCP);
+            configurator.setTcpOutgoing(true);
+            configurator.setTcpIncoming(true);
+            configurator.setUseMulticast(true);
+            // Configuracion HTTP
+            configurator.setHttpEnabled(true);
+            configurator.setHttpOutgoing(true);
+            // Iniciar la Red
+            manager.startNetwork();
             // Grupo
-            //netPeerGroup = manager.getNetPeerGroup();
-            netPeerGroup = PeerGroupFactory.newNetPeerGroup();
+            netPeerGroup = manager.getNetPeerGroup();
+            //netPeerGroup = PeerGroupFactory.newNetPeerGroup();
             // Publicar el servicio de Chat
             this.servidor = new ChatServidor(this, netPeerGroup, nombreServicio);
             this.servidor.publicarServicio();
@@ -75,7 +83,7 @@ public class ChatPeer {
     }
 
     public void terminarJXTA() {
-        //manager.stopNetwork();
+        manager.stopNetwork();
     }
 
     public void enviarMensaje(String mensaje) {

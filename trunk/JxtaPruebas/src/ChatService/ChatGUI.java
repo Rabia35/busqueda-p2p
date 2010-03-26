@@ -1,10 +1,5 @@
-/*
- * ChatGUI.java
- *
- * Created on 3/03/2010, 09:13:55 PM
- */
 
-package ChatGUI;
+package ChatService;
 
 /**
  *
