@@ -8,7 +8,6 @@ import net.jxta.document.MimeMediaType;
 import net.jxta.document.StructuredTextDocument;
 import net.jxta.exception.PeerGroupException;
 import net.jxta.peergroup.PeerGroup;
-import net.jxta.peergroup.PeerGroupFactory;
 import net.jxta.platform.NetworkConfigurator;
 import net.jxta.platform.NetworkManager;
 
@@ -74,14 +73,16 @@ public class ChatPeer {
             // Buscar el servicio de Chat
             this.cliente = new ChatCliente(this, netPeerGroup, nombreBusqueda, nombreServicio);
             this.cliente.buscarServicio();
+        } catch (PeerGroupException pgex) {
+            gui.recibirMensaje("PeerGroupException: " + pgex.getMessage());
         } catch (IOException ioex) {
             gui.recibirMensaje("IOException: " + ioex.getMessage());
-        } catch (PeerGroupException pgex) {
-            gui.recibirMensaje("PGException: " + pgex.getMessage());
         }
+        
     }
 
-    public void terminarJXTA() {
+    public void terminarJXTA() throws IOException {
+        servidor.despublicarServicio();
         manager.stopNetwork();
     }
 
@@ -95,6 +96,16 @@ public class ChatPeer {
 
     public void recibirMensaje(String mensaje) {
         gui.recibirMensaje(mensaje);
+    }
+
+    public void mostrarAdvs() {
+        servidor.mostrarInputPipeAdvs();
+        cliente.mostrarOutputPipeAdvs();
+    }
+
+    public void mostrarAdvertisement(Advertisement adv) {
+        gui.recibirMensaje("Advertisement\n");
+        gui.recibirMensaje(adv.toString());
     }
 
     public void displayAdvertisement(Advertisement adv) {

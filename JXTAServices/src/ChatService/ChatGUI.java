@@ -1,6 +1,8 @@
 
 package ChatService;
 
+import java.io.IOException;
+
 /**
  *
  * @author almunoz
@@ -24,7 +26,11 @@ public class ChatGUI extends javax.swing.JFrame {
     }
 
     private void terminarJXTA() {
-        peer.terminarJXTA();
+        try {
+            peer.terminarJXTA();
+        } catch (IOException ioex) {
+            recibirMensaje("IOException: " + ioex.getMessage());
+        }
     }
 
     /** This method is called from within the constructor to
@@ -43,6 +49,8 @@ public class ChatGUI extends javax.swing.JFrame {
         jTextAreaMensajes = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenuArchivo = new javax.swing.JMenu();
+        jMenuItemMostrarAdvs = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
         jMenuItemSalir = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -70,6 +78,15 @@ public class ChatGUI extends javax.swing.JFrame {
         jScrollPaneMensajes.setViewportView(jTextAreaMensajes);
 
         jMenuArchivo.setText("Archivo");
+
+        jMenuItemMostrarAdvs.setText("Mostrar Advertisements");
+        jMenuItemMostrarAdvs.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemMostrarAdvsActionPerformed(evt);
+            }
+        });
+        jMenuArchivo.add(jMenuItemMostrarAdvs);
+        jMenuArchivo.add(jSeparator1);
 
         jMenuItemSalir.setText("Salir");
         jMenuItemSalir.addActionListener(new java.awt.event.ActionListener() {
@@ -128,6 +145,15 @@ public class ChatGUI extends javax.swing.JFrame {
         enviarMensaje();
     }//GEN-LAST:event_jButtonEnviarActionPerformed
 
+    private void jMenuItemMostrarAdvsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMostrarAdvsActionPerformed
+        mostrarAdvertisements();
+    }//GEN-LAST:event_jMenuItemMostrarAdvsActionPerformed
+
+    private void mostrarAdvertisements() {
+        jTextAreaMensajes.setText("");
+        peer.mostrarAdvs();
+    }
+
     private void enviarMensaje() {
         String mensaje = jTextFieldMensaje.getText().trim();
         peer.enviarMensaje(mensaje);
@@ -163,8 +189,10 @@ public class ChatGUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabelMensaje;
     private javax.swing.JMenu jMenuArchivo;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItemMostrarAdvs;
     private javax.swing.JMenuItem jMenuItemSalir;
     private javax.swing.JScrollPane jScrollPaneMensajes;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JTextArea jTextAreaMensajes;
     private javax.swing.JTextField jTextFieldMensaje;
     // End of variables declaration//GEN-END:variables

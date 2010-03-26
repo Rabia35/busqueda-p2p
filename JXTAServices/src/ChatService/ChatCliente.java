@@ -70,7 +70,14 @@ public class ChatCliente {
     }
 
     public void buscarServicioChat() throws IOException {
-        this.outputPipes = new Vector<OutputPipe>(0, 10);
+        this.outputPipes = new Vector<OutputPipe>(0,10);
+        // Busca advertisements remotos y actualiza los advertisements
+        // locales, de eso se encarga el metodo getRemoteAdvertisements()
+        BusquedaListener busquedaListener = new BusquedaListener();
+        String peerId = null; // Busca todos los peers
+        int numeroAdvertisements = 1;
+        discoveryService.getRemoteAdvertisements(peerId, DiscoveryService.ADV, nombreBusqueda, nombreServicio, numeroAdvertisements, busquedaListener);
+        // Busca advertisements locales
         Enumeration<Advertisement> en = discoveryService.getLocalAdvertisements(DiscoveryService.ADV, nombreBusqueda, nombreServicio);
         if (en != null) {
             while (en.hasMoreElements()) {
@@ -78,27 +85,11 @@ public class ChatCliente {
                 pipeAdvertisement = moduleSpec.getPipeAdvertisement();
                 // Crear el canal de comunicacion (outputPipe) y agregarlo al vector
                 OutputPipe outputPipe = crearOuputPipe(pipeAdvertisement);
-                if (outputPipe != null && !outputPipes.contains(outputPipe)) {
-                    outputPipes.add(outputPipe);                    
+                if (outputPipe != null) {
+                    outputPipes.addElement(outputPipe);
                 }
             }
         }
-        // Busca si otros peers han publicado advertisements
-        BusquedaListener busquedaListener = new BusquedaListener();
-        String peerId = null; // Busca todos los peers
-        int numeroAdvertisements = 1;
-        discoveryService.getRemoteAdvertisements(peerId, DiscoveryService.ADV, nombreBusqueda, nombreServicio, numeroAdvertisements, busquedaListener);
-        mostrarOutputPipeAdvs();
-    }
-
-    public void mostrarOutputPipeAdvs() {
-        chatPeer.recibirMensaje("======================");
-        chatPeer.recibirMensaje("OutPipe Advertisements\n");
-        for (OutputPipe outputPipe : outputPipes) {
-            Advertisement adv = outputPipe.getAdvertisement();
-            chatPeer.recibirMensaje(adv.toString());
-        }
-        chatPeer.recibirMensaje("======================");
     }
 
     public void enviarMensaje(String mensaje) throws IOException {
@@ -114,27 +105,33 @@ public class ChatCliente {
         }
     }
 
+    public void mostrarOutputPipeAdvs() {
+        chatPeer.recibirMensaje("======================");
+        chatPeer.recibirMensaje("OutPipe Advertisements\n");
+        for (OutputPipe outputPipe : outputPipes) {
+            Advertisement adv = outputPipe.getAdvertisement();
+            chatPeer.recibirMensaje(adv.toString());
+        }
+        chatPeer.recibirMensaje("======================");
+    }
+
+    /*************/
+    /* Listeners */
+    /*************/
+
     public class BusquedaListener implements DiscoveryListener {
         @Override
         public void discoveryEvent(DiscoveryEvent devent) {
-            //chatPeer.recibirMensaje("Se encontraron Advertisement remotos\n");
             DiscoveryResponseMsg message = devent.getResponse();
             Enumeration<Advertisement> responses = message.getAdvertisements();
             if ( responses != null) {
                 while (responses.hasMoreElements()) {
-                    try {
-                        ModuleSpecAdvertisement moduleSpec = (ModuleSpecAdvertisement) responses.nextElement();
-                        pipeAdvertisement = moduleSpec.getPipeAdvertisement();
-                        // Crear el canal de comunicacion (outputPipe) y agregarlo al vector
-                        OutputPipe outputPipe = crearOuputPipe(pipeAdvertisement);
-                        if (outputPipe != null && !outputPipes.contains(outputPipe)) {
-                            outputPipes.add(outputPipe);
-                        }
-                    } catch (IOException ioex) {
-                        chatPeer.recibirMensaje("IOException: " + ioex.getMessage());
-                    }
+                    // Muestro el advertisement encontrado
+                    Advertisement adv = responses.nextElement();
+                    System.out.println("Se encontro un advertisement remoto " +
+                                       "de tipo: " + adv.getAdvType());
                 }
-            }
+            }            
         }
     }
 
