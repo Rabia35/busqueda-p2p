@@ -39,8 +39,10 @@ public class ChatServidor {
     private String nombreServicio;
     private DiscoveryService discoveryService;
     private PipeService pipeService;
-    // Advertisement para el pipe de los mensajes
+    // Advertisements
     private PipeAdvertisement pipeAdvertisement;
+    private ModuleClassAdvertisement moduleClass;
+    private ModuleSpecAdvertisement moduleSpec;
     // Canales de Comunicacion (Pipes)
     private InputPipe inputPipe;
 
@@ -51,6 +53,8 @@ public class ChatServidor {
         this.discoveryService = this.netPeerGroup.getDiscoveryService();
         this.pipeService = this.netPeerGroup.getPipeService();
         this.pipeAdvertisement = null;
+        this.moduleClass = null;
+        this.moduleSpec = null;
         this.inputPipe = null;
     }
 
@@ -104,6 +108,13 @@ public class ChatServidor {
     public PipeAdvertisement getPipeAdvertisement() {
         return pipeAdvertisement;
     }
+    
+    /**
+     * @return the moduleSpec
+     */
+    public ModuleSpecAdvertisement getModuleSpec() {
+        return moduleSpec;
+    }
 
     /**
      * @return the inputPipe
@@ -139,7 +150,7 @@ public class ChatServidor {
 
     public void publicarServicio() throws IOException {
         // Crear el ModuleClassAdvertisement
-        ModuleClassAdvertisement moduleClass = (ModuleClassAdvertisement) AdvertisementFactory.newAdvertisement(ModuleClassAdvertisement.getAdvertisementType());
+        moduleClass = (ModuleClassAdvertisement) AdvertisementFactory.newAdvertisement(ModuleClassAdvertisement.getAdvertisementType());
         ModuleClassID mcID = IDFactory.newModuleClassID();
         moduleClass.setModuleClassID(mcID);
         moduleClass.setName("jxta-chat-mca");
@@ -149,7 +160,7 @@ public class ChatServidor {
         // Crear el Pipe Advertisements
         pipeAdvertisement = this.crearPipeAdvertisement(PipeService.UnicastType);
         // Crear el ModuleSpecAdvertisement
-        ModuleSpecAdvertisement moduleSpec = (ModuleSpecAdvertisement) AdvertisementFactory.newAdvertisement(ModuleSpecAdvertisement.getAdvertisementType());
+        moduleSpec = (ModuleSpecAdvertisement) AdvertisementFactory.newAdvertisement(ModuleSpecAdvertisement.getAdvertisementType());
         ModuleSpecID msID = IDFactory.newModuleSpecID(mcID);
         moduleSpec.setModuleSpecID(msID);
         moduleSpec.setVersion("Version 1.0");
@@ -163,14 +174,18 @@ public class ChatServidor {
         // Crear el canal de comunicacion (inputPipe)
         PipeInputListener pipeInputListener = new PipeInputListener();
         inputPipe = pipeService.createInputPipe(pipeAdvertisement, pipeInputListener);
-        mostrarInputPipeAdvs();
+    }
+
+    public void despublicarServicio() throws IOException {
+        // Elimina el advertisement del servicio
+        discoveryService.flushAdvertisement(moduleSpec);
     }
 
     public void mostrarInputPipeAdvs() {
         chatPeer.recibirMensaje("=======================");
         chatPeer.recibirMensaje("InputPipe Advertisement\n");
         chatPeer.recibirMensaje(pipeAdvertisement.toString());
-        chatPeer.recibirMensaje("======================");
+        chatPeer.recibirMensaje("=======================");
     }
 
     // Clase para escuchar los mensajes de entrada

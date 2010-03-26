@@ -3,13 +3,11 @@ package ChatPropagate;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.InetAddress;
 import net.jxta.document.Advertisement;
 import net.jxta.document.MimeMediaType;
 import net.jxta.document.StructuredTextDocument;
 import net.jxta.exception.PeerGroupException;
 import net.jxta.peergroup.PeerGroup;
-import net.jxta.peergroup.PeerGroupFactory;
 import net.jxta.platform.NetworkConfigurator;
 import net.jxta.platform.NetworkManager;
 
