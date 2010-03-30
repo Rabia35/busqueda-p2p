@@ -17,15 +17,15 @@ import jade.lang.acl.ACLMessage;
  *
  * @author almunoz
  */
-public class ChatAgent extends Agent {
+public class AgenteChat extends Agent {
     // Servicio
     public static String NOMBRE_SERVICIO = "chat-service";
     public static String TIPO_SERVICIO = "chat";
     public static String DESCRIPCION_SERVICIO = "chat-descripcion";
-    // Para la Interfaz Grafica
-    public AID gui;
+    // EL agente de la Interfaz Grafica
+    private AID agenteGUI;
     // Para la Interfaz JXTA
-    public AID jxta;
+    private AID agenteJXTA;
 
     @Override
     protected void setup() {
@@ -45,17 +45,17 @@ public class ChatAgent extends Agent {
 
     private void registrarServicio() {
         try {
+            // Crea la descripcion del agente
             DFAgentDescription dfad = new DFAgentDescription();
             dfad.setName(getAID());
-            //dfad.addLanguages(lenguaje);
-            //dfad.addOntologies(ontologia);
+            // Crea la descripcion del servicio
             ServiceDescription sd = new ServiceDescription();
-            sd.setName(ChatAgent.NOMBRE_SERVICIO);
-            sd.setType(ChatAgent.TIPO_SERVICIO);
+            sd.setName(AgenteChat.NOMBRE_SERVICIO);
+            sd.setType(AgenteChat.TIPO_SERVICIO);
             dfad.addServices(sd);
-            // Registrar la descrpcion en el DF
+            // Registrar la descripcion del agente en el DF
             DFService.register(this, dfad);
-            System.out.println("El servicio " + ChatAgent.NOMBRE_SERVICIO + " se ha registrado.");
+            System.out.println("El servicio " + AgenteChat.NOMBRE_SERVICIO + " se ha registrado.");
         } catch (FIPAException fex) {
             System.out.println("FIPAException: " + fex.getMessage());
         }
@@ -64,7 +64,7 @@ public class ChatAgent extends Agent {
     private void deregistrarServicio() {
         try {
             DFService.deregister(this);
-            System.out.println("El servicio " + ChatAgent.NOMBRE_SERVICIO + " ya no esta registrado.");
+            System.out.println("El servicio " + AgenteChat.NOMBRE_SERVICIO + " ya no esta registrado.");
         } catch (FIPAException fex) {
             System.out.println("FIPAException: " + fex.getMessage());
         }
@@ -75,7 +75,7 @@ public class ChatAgent extends Agent {
             // Build the description used as template for the search
             DFAgentDescription templateDfad = new DFAgentDescription();
             ServiceDescription templateSd = new ServiceDescription();
-            templateSd.setType(GUIAgent.TIPO_SERVICIO);
+            templateSd.setType(AgenteGUI.TIPO_SERVICIO);
             templateDfad.addServices(templateSd);
 
             SearchConstraints sc = new SearchConstraints();
@@ -83,7 +83,7 @@ public class ChatAgent extends Agent {
 
             DFAgentDescription[] results = DFService.search(this, templateDfad, sc);
             if (results.length > 0) {
-                gui = results[0].getName();
+                agenteGUI = results[0].getName();
                 return true;
             }
         } catch (FIPAException fex) {
@@ -98,7 +98,7 @@ public class ChatAgent extends Agent {
             // Build the description used as template for the search
             DFAgentDescription templateDfad = new DFAgentDescription();
             ServiceDescription templateSd = new ServiceDescription();
-            templateSd.setType(JXTAAgent.TIPO_SERVICIO);
+            templateSd.setType(AgenteJXTA.TIPO_SERVICIO);
             templateDfad.addServices(templateSd);
 
             SearchConstraints sc = new SearchConstraints();
@@ -106,13 +106,13 @@ public class ChatAgent extends Agent {
 
             DFAgentDescription[] results = DFService.search(this, templateDfad, sc);
             if (results.length > 0) {
-                gui = results[0].getName();
+                agenteJXTA = results[0].getName();
                 return true;
             }
         } catch (FIPAException fex) {
             System.out.println("FIPAException: " + fex.getMessage());
         }
-        System.out.println("El agente " + getLocalName() + " no encontro ningun servicio de interfaz grafica.");
+        System.out.println("El agente " + getLocalName() + " no encontro ningun servicio de JXTA.");
         return false;
     }
 
@@ -169,20 +169,20 @@ public class ChatAgent extends Agent {
             ACLMessage acl = receive();
             if (acl != null) {
                 String mensaje = acl.getContent();
-                System.out.println(acl.getSender().getLocalName() + " dice: " + mensaje);
-                // Crea la respuesta
-                //myAgent.addBehaviour(new EnviarRespuestaBehaviour(acl));
-                if (acl.getSender() != jxta) {
+                System.out.println(mensaje);
+                if (acl.getPerformative() == ACLMessage.REQUEST) {
                     ACLMessage aclJXTA = new ACLMessage(ACLMessage.INFORM);
-                    aclJXTA.addReceiver(jxta);
+                    aclJXTA.addReceiver(agenteJXTA);
                     aclJXTA.setContent(mensaje);
                     myAgent.send(aclJXTA);
-                }
-                if (acl.getSender() != gui) {
+                } else if (acl.getPerformative() == ACLMessage.INFORM) {
                     ACLMessage aclGUI = new ACLMessage(ACLMessage.INFORM);
-                    aclGUI.addReceiver(gui);
+                    aclGUI.addReceiver(agenteGUI);
                     aclGUI.setContent(mensaje);
                     myAgent.send(aclGUI);
+                } else {
+                    // Crea la respuesta
+                    myAgent.addBehaviour(new EnviarRespuestaBehaviour(acl));
                 }
             } else {
                 this.block();
@@ -202,7 +202,7 @@ public class ChatAgent extends Agent {
             // Crea la respuesta
             ACLMessage reply = acl.createReply();
             reply.setPerformative(ACLMessage.INFORM);
-            reply.setContent("Gracias. Mensaje Recibido.");
+            reply.setContent("No se pudo procesar el mensaje.");
             myAgent.send(reply);
         }
     }

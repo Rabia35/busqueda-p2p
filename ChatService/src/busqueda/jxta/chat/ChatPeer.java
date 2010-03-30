@@ -1,7 +1,8 @@
 
 package busqueda.jxta.chat;
 
-import gui.ChatGUI;
+import busqueda.jxta.JXTAManager;
+import jade.wrapper.StaleProxyException;
 import java.io.IOException;
 import net.jxta.document.Advertisement;
 import net.jxta.exception.PeerGroupException;
@@ -18,8 +19,8 @@ public class ChatPeer {
     public static String BUSQUEDA = "Name";
     public static String TIPO_SERVICIO = "chat";
     public static String DESCRIPCION_SERVICIO = "chat-descripcion";
-    // Interfaz Grafica
-    private ChatGUI gui;
+    // JXTA Manager
+    private JXTAManager jxtaManager;
     // Red
     private NetworkManager manager;
     private NetworkConfigurator configurator;
@@ -27,18 +28,18 @@ public class ChatPeer {
     private ChatServidor servidor;
     private ChatCliente cliente;
     // Puerto TCP
-    private int puertoTCP;
+    private String puertoTCP;
     // Grupo
     private PeerGroup netPeerGroup;
         
-    public ChatPeer(ChatGUI chatGUI) {
-        this.gui = chatGUI;
+    public ChatPeer(JXTAManager jxtaManager) {
+        this.jxtaManager = jxtaManager;
         this.manager = null;
         this.configurator = null;
         this.servidor = null;
         this.cliente = null;
-        this.puertoTCP = 9701;
-        this.netPeerGroup = null;
+        this.puertoTCP = "9701";
+        this.netPeerGroup = null;        
     }
 
     public PeerGroup getNetPeerGroup() {
@@ -46,17 +47,18 @@ public class ChatPeer {
     }
 
     public void iniciarJXTA() {
-        iniciarJXTA("9701");
+        iniciarJXTA(puertoTCP);
     }
     
     public void iniciarJXTA(String port) {
         try {
+            this.puertoTCP = port;
             // Configurar el Nodo dentro de la Red JXTA
             manager = new NetworkManager(NetworkManager.ConfigMode.RENDEZVOUS, "chat-nodo");
             configurator = manager.getConfigurator();
             // Configuracion TCP
             configurator.setTcpEnabled(true);
-            configurator.setTcpPort(puertoTCP);
+            configurator.setTcpPort(Integer.valueOf(this.puertoTCP));
             configurator.setTcpOutgoing(true);
             configurator.setTcpIncoming(true);
             configurator.setUseMulticast(true);
@@ -75,9 +77,9 @@ public class ChatPeer {
             cliente = new ChatCliente(this, servidor.getPipeAdvertisement());
             cliente.buscarAdvertisement(ChatPeer.BUSQUEDA, ChatPeer.TIPO_SERVICIO);
         } catch (PeerGroupException pgex) {
-            gui.mostrarMensaje("PeerGroupException: " + pgex.getMessage());
+            System.out.println("PeerGroupException: " + pgex.getMessage());
         } catch (IOException ioex) {
-            gui.mostrarMensaje("IOException: " + ioex.getMessage());
+            System.out.println("IOException: " + ioex.getMessage());
         }
         
     }
@@ -91,7 +93,7 @@ public class ChatPeer {
         try {
             servidor.publicarAdvertisement(nombre, descripcion);
         } catch (IOException ioex) {
-            gui.mostrarMensaje("IOException: " + ioex.getMessage());
+            System.out.println("IOException: " + ioex.getMessage());
         }
     }
 
@@ -99,7 +101,7 @@ public class ChatPeer {
         try {
             cliente.buscarAdvertisement(ChatPeer.BUSQUEDA, nombre);
         } catch (IOException ioex) {
-            gui.mostrarMensaje("IOException: " + ioex.getMessage());
+            System.out.println("IOException: " + ioex.getMessage());
         }
     }
 
@@ -107,22 +109,26 @@ public class ChatPeer {
         try {
             cliente.enviarMensaje(mensaje);
         } catch (IOException ioex) {
-            gui.mostrarMensaje("IOException: " + ioex.getMessage());
+            System.out.println("IOException: " + ioex.getMessage());
         }
     }
 
-    public void mostrarMensaje(String mensaje) {
-        gui.mostrarMensaje(mensaje);
+    public void mostrarMensaje(String mensaje) throws StaleProxyException {
+        jxtaManager.mostrarMensajeChat(mensaje);
     }
 
-    public void mostrarAdvertisements() {
-        servidor.mostrarInputPipeAdvs();
-        cliente.mostrarOutputPipeAdvs();
+    public String getAdvertisements() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(servidor.getInputPipeAdvs());
+        buffer.append("\n");
+        buffer.append(cliente.getOutputPipeAdvs());
+        buffer.append("\n");
+        return buffer.toString();
     }
 
     public void mostrarAdvertisement(Advertisement adv) {
-        gui.mostrarMensaje("Advertisement\n");
-        gui.mostrarMensaje(adv.toString());
+        System.out.println("Advertisement\n");
+        System.out.println(adv.toString());
     }
     
 }

@@ -1,7 +1,7 @@
 
 package busqueda.jade.chat;
 
-import busqueda.jxta.JXTAManager;
+import busqueda.jade.JADEManager;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -18,21 +18,21 @@ import jade.lang.acl.ACLMessage;
  *
  * @author almunoz
  */
-public class JXTAAgent extends Agent {
-    public static String NOMBRE_SERVICIO = "chat-jxta-service";
-    public static String TIPO_SERVICIO = "chat-jxta";
-    public static String DESCRIPCION_SERVICIO = "chat-jxta-descripcion";
-    // Para el nodo JXTA
-    private JXTAManager jxta;
+public class AgenteGUI extends Agent {
+    public static String NOMBRE_SERVICIO = "chat-gui-service";
+    public static String TIPO_SERVICIO = "chat-gui";
+    public static String DESCRIPCION_SERVICIO = "chat-gui-descripcion";
+    // El manager que realiza la conexion con el JADE Communicator
+    private JADEManager jadeManager;
     // Agente del Chat
-    private AID chat;    
+    private AID agenteChat;
 
     @Override
     protected void setup() {
         // Argumentos
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
-            jxta = (JXTAManager) args[0];
+            jadeManager = (JADEManager) args[0];
         } else {
             doDelete();
         }
@@ -56,15 +56,13 @@ public class JXTAAgent extends Agent {
         try {
             DFAgentDescription dfad = new DFAgentDescription();
             dfad.setName(getAID());
-            //dfad.addLanguages(lenguaje);
-            //dfad.addOntologies(ontologia);
             ServiceDescription sd = new ServiceDescription();
-            sd.setName(JXTAAgent.NOMBRE_SERVICIO);
-            sd.setType(JXTAAgent.TIPO_SERVICIO);
+            sd.setName(AgenteGUI.NOMBRE_SERVICIO);
+            sd.setType(AgenteGUI.TIPO_SERVICIO);
             dfad.addServices(sd);
             // Registrar la descripcion en el DF
             DFService.register(this, dfad);
-            System.out.println("El servicio " + JXTAAgent.NOMBRE_SERVICIO + " se ha registrado.");
+            System.out.println("El servicio " + AgenteGUI.NOMBRE_SERVICIO + " se ha registrado.");
         } catch (FIPAException fex) {
             System.out.println("FIPAException: " + fex.getMessage());
         }
@@ -73,7 +71,7 @@ public class JXTAAgent extends Agent {
     private void deregistrarServicio() {
         try {
             DFService.deregister(this);
-            System.out.println("El servicio " + JXTAAgent.NOMBRE_SERVICIO + " ya no esta registrado.");
+            System.out.println("El servicio " + AgenteGUI.NOMBRE_SERVICIO + " ya no esta registrado.");
         } catch (FIPAException fex) {
             System.out.println("FIPAException: " + fex.getMessage());
         }
@@ -84,7 +82,7 @@ public class JXTAAgent extends Agent {
             // Build the description used as template for the search
             DFAgentDescription templateDfad = new DFAgentDescription();
             ServiceDescription templateSd = new ServiceDescription();
-            templateSd.setType(ChatAgent.TIPO_SERVICIO);
+            templateSd.setType(AgenteChat.TIPO_SERVICIO);
             templateDfad.addServices(templateSd);
 
             SearchConstraints sc = new SearchConstraints();
@@ -92,7 +90,7 @@ public class JXTAAgent extends Agent {
 
             DFAgentDescription[] results = DFService.search(this, templateDfad, sc);
             if (results.length > 0) {
-                chat = results[0].getName();
+                agenteChat = results[0].getName();
                 return true;
             }
         } catch (FIPAException fex) {
@@ -150,8 +148,8 @@ public class JXTAAgent extends Agent {
 
         @Override
         public void action() {
-            ACLMessage acl = new ACLMessage(ACLMessage.INFORM);
-            acl.addReceiver(chat);
+            ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
+            acl.addReceiver(agenteChat);
             acl.setContent(mensaje);
             myAgent.send(acl);
         }
@@ -160,11 +158,11 @@ public class JXTAAgent extends Agent {
     public class RecibirMensajeBehaviour extends CyclicBehaviour {
         @Override
         public void action() {
-            // Para recibir el mensaje, dependiendo el tipo realizo la accion en JXTA
+            // Para recibir el mensaje
             ACLMessage acl = receive();
             if (acl != null) {
                 String mensaje = acl.getContent();
-                jxta.enviarMensajeChat(acl.getSender().getName() + " dice: " + mensaje);
+                jadeManager.mostrarMensajeChat(mensaje);
             } else {
                 block();
             }
