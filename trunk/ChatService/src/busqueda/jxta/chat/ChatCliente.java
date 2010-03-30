@@ -1,6 +1,7 @@
 
 package busqueda.jxta.chat;
 
+import jade.wrapper.StaleProxyException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -23,7 +24,7 @@ import net.jxta.protocol.PipeAdvertisement;
  */
 public class ChatCliente {
     // ChatPeer
-    private ChatPeer chatPeer;
+    private ChatPeer peerChat;
     // Advertisement para el pipe de los mensajes
     private PipeAdvertisement pipeAdvertisement;
     // Canales de Comunicacion (Pipes)
@@ -35,8 +36,8 @@ public class ChatCliente {
     // Advertisement para el pipe de los mensajes
     private PipeAdvertisement pipeServidor;
 
-    public ChatCliente(ChatPeer chatPeer, PipeAdvertisement pipeServidor) {
-        this.chatPeer = chatPeer;
+    public ChatCliente(ChatPeer peerChat, PipeAdvertisement pipeServidor) {
+        this.peerChat = peerChat;
         this.pipeAdvertisement = null;
         this.outputPipes = null;
         this.tiempoEspera = 5000L; // 5 segundos
@@ -46,7 +47,7 @@ public class ChatCliente {
 
     private OutputPipe crearOuputPipe(PipeAdvertisement advertisement) throws IOException {
         OutputPipe pipe = null;
-        pipe = chatPeer.getNetPeerGroup().getPipeService().createOutputPipe(advertisement, tiempoEspera);
+        pipe = peerChat.getNetPeerGroup().getPipeService().createOutputPipe(advertisement, tiempoEspera);
         return pipe;
     }
 
@@ -65,9 +66,9 @@ public class ChatCliente {
         BusquedaListener busquedaListener = new BusquedaListener();
         String peerId = null; // Busca todos los peers
         int numeroAdvertisements = 1;
-        chatPeer.getNetPeerGroup().getDiscoveryService().getRemoteAdvertisements(peerId, DiscoveryService.ADV, busqueda, nombre, numeroAdvertisements, busquedaListener);
+        peerChat.getNetPeerGroup().getDiscoveryService().getRemoteAdvertisements(peerId, DiscoveryService.ADV, busqueda, nombre, numeroAdvertisements, busquedaListener);
         // Busca advertisements locales
-        Enumeration<Advertisement> en = chatPeer.getNetPeerGroup().getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, busqueda, nombre);
+        Enumeration<Advertisement> en = peerChat.getNetPeerGroup().getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, busqueda, nombre);
         if (en != null) {
             while (en.hasMoreElements()) {
                 pipeAdvertisement = (PipeAdvertisement) en.nextElement();
@@ -90,19 +91,24 @@ public class ChatCliente {
             if (outputPipe != null) {
                 outputPipe.send(message);
             } else {
-                chatPeer.mostrarMensaje("El OutputPipe es null, no se puede enviar el mensaje");
+                System.out.println("El OutputPipe es null, no se puede enviar el mensaje");
             }
         }
     }
 
-    public void mostrarOutputPipeAdvs() {
-        chatPeer.mostrarMensaje("======================");
-        chatPeer.mostrarMensaje("OutPipe Advertisements\n");
+    public String getOutputPipeAdvs() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("======================\n");
+        buffer.append("OutPipe Advertisements\n");
+        buffer.append("\n");
         for (OutputPipe outputPipe : outputPipes) {
             Advertisement adv = outputPipe.getAdvertisement();
-            chatPeer.mostrarMensaje(adv.toString());
+            buffer.append(adv.toString());
+            buffer.append("\n");
         }
-        chatPeer.mostrarMensaje("======================");
+        buffer.append("======================");
+        buffer.append("\n");
+        return buffer.toString();
     }
 
     /*************/
@@ -139,7 +145,7 @@ public class ChatCliente {
             try {
                 buscarAdvertisementChat(busqueda, nombre);
             } catch (IOException ioex) {
-                chatPeer.mostrarMensaje("IOException: " + ioex.getMessage());
+                System.out.println("IOException: " + ioex.getMessage());
             }
         }
     }

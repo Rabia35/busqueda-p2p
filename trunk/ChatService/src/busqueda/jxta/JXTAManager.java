@@ -1,8 +1,9 @@
 
 package busqueda.jxta;
 
+import busqueda.JXTACommunicator;
 import busqueda.jxta.chat.ChatPeer;
-import gui.ChatGUI;
+import jade.wrapper.StaleProxyException;
 import java.io.IOException;
 
 /**
@@ -10,46 +11,52 @@ import java.io.IOException;
  * @author almunoz
  */
 public class JXTAManager {
-    // Chat GUI
-    //private ChatGUI gui;
+    // JXTA Communicator
+    private JXTACommunicator jxtaCommunicator;
+    // Puerto
     private String puerto;
     // Chat Peer
-    private ChatPeer chat;
+    private ChatPeer peerChat;
 
-    public JXTAManager(ChatGUI gui) {
-        //this.gui = gui;
-        this.chat = new ChatPeer(gui);
+    public JXTAManager(JXTACommunicator jxtaCommunicator) {
+        this.jxtaCommunicator = jxtaCommunicator;
+        this.puerto = "9701";
+        this.peerChat = new ChatPeer(this);
     }
 
     public void iniciar() {
-        iniciar("9701");
+        iniciar(this.puerto);
     }
 
     public void iniciar(String port) {
         this.puerto = port;
-        chat.iniciarJXTA(this.puerto);
+        peerChat.iniciarJXTA(this.puerto);
     }
 
     public void terminar() throws IOException {
-        chat.terminarJXTA();
+        peerChat.terminarJXTA();
     }
 
     /* CHAT */
 
     public void publicarAdvertisementChat(String nombre, String descripcion) {
-        chat.publicarAdvertisement(nombre, descripcion);
+        peerChat.publicarAdvertisement(nombre, descripcion);
     }
 
     public void buscarAdvertisementChat(String nombre) {
-        chat.buscarAdvertisement(nombre);
+        peerChat.buscarAdvertisement(nombre);
     }
 
     public void enviarMensajeChat(String mensaje) {
-        chat.enviarMensaje(mensaje);
+        peerChat.enviarMensaje(mensaje);
     }
 
-    public void mostrarAdvertisementsChat() {
-        chat.mostrarAdvertisements();
+    public void mostrarMensajeChat(String mensaje) throws StaleProxyException {
+        jxtaCommunicator.mostrarMensajeChat(mensaje);
+    }
+
+    public String getAdvertisementsChat() {
+        return peerChat.getAdvertisements();
     }
 
 }

@@ -1,8 +1,8 @@
 
 package busqueda.jade;
 
-import busqueda.jxta.JXTAManager;
-import gui.ChatGUI;
+import busqueda.JADECommunicator;
+import busqueda.JXTACommunicator;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -15,29 +15,31 @@ import jade.wrapper.StaleProxyException;
  * @author almunoz
  */
 public class JADEManager {
-    // Interfaz
-    private ChatGUI gui;
-    private String puerto;
+    // JADE Communicator
+    private JADECommunicator jadeCommunicator;
     // Para iniciar la plataforma
     private Profile profile;
+    private String puerto;
     private ContainerController mainContainer;
-    private AgentController rma;
     // Agentes
-    private AgentController interfaz;
-    private AgentController chat;
-    private AgentController jxta;
-    // JXTA Manager
-    private JXTAManager jxtaManager;
+    private AgentController agenteRMA;
+    private AgentController agenteGUI;
+    private AgentController agenteChat;
+    private AgentController agenteJXTA;
 
-    public JADEManager(ChatGUI gui, JXTAManager jxtaManager) {
-        this.gui = gui;
+    public JADEManager(JADECommunicator jadeCommunicator) {
+        this.jadeCommunicator = jadeCommunicator;
+        this.profile = null;
+        this.puerto = "1099";
         this.mainContainer = null;
-        this.rma = null;
-        this.jxtaManager = jxtaManager;
+        this.agenteRMA = null;
+        this.agenteGUI = null;
+        this.agenteChat = null;
+        this.agenteJXTA = null;
     }
 
     public void iniciar() throws StaleProxyException {
-        iniciar("1099");
+        iniciar(this.puerto);
     }
 
     public void iniciar(String port) throws StaleProxyException {
@@ -47,23 +49,15 @@ public class JADEManager {
         profile.setParameter(Profile.MAIN_PORT, this.puerto);
         profile.setParameter(Profile.LOCAL_PORT, this.puerto);
         mainContainer = runtime.createMainContainer(profile);
-        // Crea e inicia el agente RMA: Remote Management Agent
-        rma = mainContainer.createNewAgent("RMA", "jade.tools.rma.rma", null);
-        rma.start();
-        // Crea e inicia el agente chat
-        chat = crearAgente("chat", "busqueda.jade.chat.ChatAgent", null);
-        Object[] argumentos = {gui};
-        // Crea e inicia el agente interfaz de usuario
-        interfaz = crearAgente("gui", "busqueda.jade.chat.GUIAgent", argumentos);
-        // Crea e inicia el agente jxta
-        Object[] argumentosJXTA = {jxtaManager};
-        jxta = crearAgente("jxta", "busqueda.jade.chat.JXTAAgent", argumentosJXTA);
+        // Crea e inicia el agenteRMA: Remote Management Agent
+        agenteRMA = crearAgente("RMA", "jade.tools.rma.rma", null);
     }
 
     public void terminar() throws StaleProxyException {
-        chat.kill();
-        interfaz.kill();
-        jxta.kill();
+        agenteChat.kill();
+        agenteGUI.kill();
+        agenteJXTA.kill();
+        agenteRMA.kill();
         mainContainer.kill();
     }
 
@@ -73,12 +67,32 @@ public class JADEManager {
         return agente;
     }
 
-    public void detenerAgente(AgentController agente) throws StaleProxyException {
-        agente.kill();
+    public void crearAgentes() throws StaleProxyException {
+        // Crea e inicia el agenteChat
+        agenteChat = crearAgente("chat", "busqueda.jade.chat.AgenteChat", null);
+        // Crea e inicia el agenteGUI
+        Object[] argumentos = {this};
+        agenteGUI = crearAgente("gui", "busqueda.jade.chat.AgenteGUI", argumentos);
     }
 
-    public void enviarMensaje(String mensaje) throws StaleProxyException {
-        interfaz.putO2AObject(mensaje, AgentController.ASYNC);
+    public void crearAgentesJXTA(JXTACommunicator jxtaCommunicator) throws StaleProxyException {
+        Object[] argumentos = {jxtaCommunicator};
+        // Crea e inicia el agenteJXTA
+        agenteJXTA = crearAgente("jxta", "busqueda.jade.chat.AgenteJXTA", argumentos);
+    }
+
+    /* METODOS PARA EL CHAT */
+
+    public void enviarMensajeChat(String mensaje) throws StaleProxyException {
+        agenteGUI.putO2AObject(mensaje, AgentController.ASYNC);
+    }
+
+    public void mostrarMensajeChat(String mensaje) {
+        jadeCommunicator.mostrarMensajeChat(mensaje);
+    }
+
+    public void recibirMensajeChat(String mensaje) throws StaleProxyException {
+        agenteJXTA.putO2AObject(mensaje, AgentController.ASYNC);
     }
     
 }

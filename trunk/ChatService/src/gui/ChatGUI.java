@@ -1,8 +1,8 @@
 
 package gui;
 
-import busqueda.jade.JADEManager;
-import busqueda.jxta.JXTAManager;
+import busqueda.JADECommunicator;
+import busqueda.JXTACommunicator;
 import jade.wrapper.StaleProxyException;
 import java.io.IOException;
 
@@ -11,17 +11,34 @@ import java.io.IOException;
  * @author almunoz
  */
 public class ChatGUI extends javax.swing.JFrame {
-    private JADEManager jade;
+    // Objetos para la comunicacion entre plataformas
+    private JADECommunicator jadeCommunicator;
+    private JXTACommunicator jxtaCommunicator;
+    // Puertos
     private String jadePort;
-    private JXTAManager jxta;
     private String jxtaPort;
 
     /** Creates new form ChatGUI */
     public ChatGUI(String args[]) {
         initComponents();
-        extraerArgumentos(args);
-        iniciarJXTA();
-        iniciarJADE();        
+        iniciar(args);
+    }
+
+    public void iniciar(String args[]) {
+        try {
+            extraerArgumentos(args);
+            jxtaCommunicator = new JXTACommunicator(this);
+            jadeCommunicator = new JADECommunicator(jxtaCommunicator, this);
+            jxtaCommunicator.setJadeCommunicator(jadeCommunicator);
+            // Iniciar JXTA
+            jxtaCommunicator.iniciarJXTA(jxtaPort);
+            // Iniciar JADE
+            jadeCommunicator.iniciarJADE(jadePort);
+        } catch (StaleProxyException ex) {
+            System.out.println("StaleProxyException: " + ex.getMessage());
+            System.out.println("No se pudo iniciar la plataforma JADE.");
+            System.exit(1);
+        }
     }
 
     public void extraerArgumentos(String args[]) {
@@ -35,42 +52,16 @@ public class ChatGUI extends javax.swing.JFrame {
         }
     }
 
-    private void iniciarJADE() {
+    public void salir() {
         try {
-            this.jade = new JADEManager(this, jxta);
-            if (jadePort != null) {
-                this.jade.iniciar(jadePort);
-            }
-            else {
-                this.jade.iniciar();
-            }
+            jadeCommunicator.terminarJADE();
+            jxtaCommunicator.terminarJXTA();
         } catch (StaleProxyException ex) {
-            System.out.println("Exception: " +  ex.getMessage());
-        }
-    }
-
-    private void terminarJADE() {
-        try {
-            this.jade.terminar();
-        } catch (StaleProxyException ex) {
-            System.out.println("Exception: " +  ex.getMessage());
-        }
-    }
-
-    private void iniciarJXTA() {
-        this.jxta = new JXTAManager(this);
-        if (jxtaPort != null) {
-            this.jxta.iniciar(jxtaPort);
-        } else {
-            this.jxta.iniciar();
-        }
-    }
-
-    private void terminarJXTA() {
-        try {
-            this.jxta.terminar();
-        } catch (IOException ioex) {
-            System.out.println("IOException: " +  ioex.getMessage());
+            System.out.println("StaleProxyException: " + ex.getMessage());
+        } catch (IOException ex) {
+            System.out.println("IOException: " + ex.getMessage());
+        } finally {
+            System.exit(0);
         }
     }
 
@@ -186,14 +177,11 @@ public class ChatGUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        terminarJADE();
-        terminarJXTA();
+        salir();
     }//GEN-LAST:event_formWindowClosing
 
     private void jMenuItemSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSalirActionPerformed
-        terminarJADE();
-        terminarJXTA();
-        System.exit(0);
+        salir();
     }//GEN-LAST:event_jMenuItemSalirActionPerformed
 
     private void jButtonEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonEnviarActionPerformed
@@ -210,14 +198,14 @@ public class ChatGUI extends javax.swing.JFrame {
 
     private void mostrarAdvertisements() {
         jTextAreaMensajes.setText("");
-        jxta.mostrarAdvertisementsChat();
+        jTextAreaMensajes.setText(jxtaCommunicator.getAdvertisementsChat());
     }
 
     private void enviarMensaje() {
         try {
             String mensaje = jTextFieldMensaje.getText().trim();
             jTextAreaMensajes.append("\nYo digo: " + mensaje);
-            jade.enviarMensaje(mensaje);            
+            jadeCommunicator.enviarMensajeChat(mensaje);
         } catch (StaleProxyException ex) {
             System.out.println("Exception: " +  ex.getMessage());
         }
