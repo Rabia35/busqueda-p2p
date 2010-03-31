@@ -1,7 +1,7 @@
 
 package busqueda.jxta.chat;
 
-import jade.wrapper.StaleProxyException;
+import busqueda.jxta.PeerBusqueda;
 import java.io.IOException;
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.endpoint.Message;
@@ -20,15 +20,15 @@ import net.jxta.protocol.PipeAdvertisement;
  * @author almunoz
  */
 public class ChatServidor {
-    // ChatPeer
-    private ChatPeer peerChat;
-    // Advertisements
+    // Peer
+    private PeerBusqueda peer;
+    // Advertisement
     private PipeAdvertisement pipeAdvertisement;
-    // Canales de Comunicacion (Pipes)
+    // Canal de Comunicacion (Pipe)
     private InputPipe inputPipe;
 
-    public ChatServidor(ChatPeer peerChat) {
-        this.peerChat = peerChat;
+    public ChatServidor(PeerBusqueda peer) {
+        this.peer = peer;
         this.pipeAdvertisement = null;
         this.inputPipe = null;
     }
@@ -41,7 +41,7 @@ public class ChatServidor {
     }
 
     private PipeAdvertisement crearPipeAdvertisement(String nombre, String descripcion) {
-        PipeID pipeID = (PipeID) IDFactory.newPipeID(peerChat.getNetPeerGroup().getPeerGroupID());
+        PipeID pipeID = (PipeID) IDFactory.newPipeID(peer.getNetPeerGroup().getPeerGroupID());
         PipeAdvertisement advertisement = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
         advertisement.setPipeID(pipeID);
         advertisement.setType(PipeService.UnicastType);
@@ -50,32 +50,33 @@ public class ChatServidor {
         return advertisement;
     }
 
-    public void publicarAdvertisement(String nombre, String descripcion) throws IOException {
-        // Crear el Pipe Advertisements
-        pipeAdvertisement = crearPipeAdvertisement(nombre, descripcion);
-        // Publicar el Pipe
-        peerChat.getNetPeerGroup().getDiscoveryService().publish(getPipeAdvertisement());
-        peerChat.getNetPeerGroup().getDiscoveryService().remotePublish(getPipeAdvertisement());
-        // Crear el canal de comunicacion (inputPipe)
+    private InputPipe crearInputPipe(PipeAdvertisement advertisement) throws IOException {
         PipeInputListener pipeInputListener = new PipeInputListener();
-        inputPipe = peerChat.getNetPeerGroup().getPipeService().createInputPipe(getPipeAdvertisement(),pipeInputListener);
+        InputPipe pipe = peer.getNetPeerGroup().getPipeService().createInputPipe(advertisement, pipeInputListener);
+        return pipe;
     }
 
-    public void despublicarAdvertisement() throws IOException {
-        // Elimina el advertisement del servicio
-        peerChat.getNetPeerGroup().getDiscoveryService().flushAdvertisement(getPipeAdvertisement());
+    private void publicarAdvertisement(PipeAdvertisement advertisement) throws IOException {
+        peer.getNetPeerGroup().getDiscoveryService().publish(advertisement);
+        peer.getNetPeerGroup().getDiscoveryService().remotePublish(advertisement);
     }
 
-    public String getInputPipeAdvs() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append("=======================\n");
-        buffer.append("InputPipe Advertisement\n");
-        buffer.append("\n");
-        buffer.append(getPipeAdvertisement().toString());
-        buffer.append("\n");
-        buffer.append("=======================");
-        buffer.append("\n");
-        return buffer.toString();
+    public void iniciar(String nombre, String descripcion) {
+        try {
+            pipeAdvertisement = crearPipeAdvertisement(nombre, descripcion);
+            inputPipe = crearInputPipe(pipeAdvertisement);
+            publicarAdvertisement(pipeAdvertisement);
+        } catch (IOException ex) {
+            System.out.println("IOException: " + ex.getMessage());
+        }
+    }
+
+    public void detener() {
+        try {
+            peer.getNetPeerGroup().getDiscoveryService().flushAdvertisement(pipeAdvertisement);
+        } catch (IOException ex) {
+            System.out.println("IOException: " + ex.getMessage());
+        }
     }
 
     // Clase para escuchar los mensajes de entrada
@@ -91,20 +92,23 @@ public class ChatServidor {
             // Por nombre del elemento
             MessageElement mensajeElement  = message.getMessageElement("mensaje");
             if (mensajeElement.toString() != null) {
-                try {
-                    // Procesa el elemento del mensaje
-                    peerChat.mostrarMensaje(mensajeElement.toString());
-                } catch (StaleProxyException ex) {
-                    System.out.println("StaleProxyException: " + ex.getMessage());
-                }
+                peer.mostrarMensajeChat(mensajeElement.toString());
             } else {
-                try {
-                    peerChat.mostrarMensaje("No se encuentra el elemento <mensaje>.");
-                } catch (StaleProxyException ex) {
-                    System.out.println("StaleProxyException: " + ex.getMessage());
-                }
+                peer.mostrarMensajeChat("No se encuentra el elemento <mensaje>.");
             }
         }
+    }
+
+    public String getInputPipeAdvs() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("=======================\n");
+        buffer.append("InputPipe Advertisement\n");
+        buffer.append("\n");
+        buffer.append(pipeAdvertisement.toString());
+        buffer.append("\n");
+        buffer.append("=======================");
+        buffer.append("\n");
+        return buffer.toString();
     }
 
 }

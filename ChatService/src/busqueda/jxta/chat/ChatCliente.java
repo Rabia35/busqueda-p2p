@@ -1,7 +1,7 @@
 
 package busqueda.jxta.chat;
 
-import jade.wrapper.StaleProxyException;
+import busqueda.jxta.PeerBusqueda;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -23,58 +23,56 @@ import net.jxta.protocol.PipeAdvertisement;
  * @author almunoz
  */
 public class ChatCliente {
-    // ChatPeer
-    private ChatPeer peerChat;
-    // Advertisement para el pipe de los mensajes
-    private PipeAdvertisement pipeAdvertisement;
+    // Peer
+    private PeerBusqueda peer;
+    // Advertisement del servidor local
+    private PipeAdvertisement pipeAdvertisementServidor;
+    // Advertisement
+    private PipeAdvertisement pipeAdvertisement;    
     // Canales de Comunicacion (Pipes)
     private Vector<OutputPipe> outputPipes;
-    private long tiempoEspera;
+    private static long TIMEOUT = 5000; // 5 segundos
     // Timer, para buscar advertisements remotos cada cierto tiempo
-    private static int TIEMPO = 30000; // 30 segundos
+    private static int TIEMPO_BUSQUEDA = 30000; // 30 segundos
     private Timer timerBusqueda;
-    // Advertisement para el pipe de los mensajes
-    private PipeAdvertisement pipeServidor;
 
-    public ChatCliente(ChatPeer peerChat, PipeAdvertisement pipeServidor) {
-        this.peerChat = peerChat;
+    public ChatCliente(PeerBusqueda peer) {
+        this.peer = peer;
+        this.pipeAdvertisementServidor = null;
         this.pipeAdvertisement = null;
-        this.outputPipes = null;
-        this.tiempoEspera = 5000L; // 5 segundos
+        this.outputPipes = new Vector<OutputPipe>(0,10);
         this.timerBusqueda = null;
-        this.pipeServidor = pipeServidor;
     }
-
+    
     private OutputPipe crearOuputPipe(PipeAdvertisement advertisement) throws IOException {
         OutputPipe pipe = null;
-        pipe = peerChat.getNetPeerGroup().getPipeService().createOutputPipe(advertisement, tiempoEspera);
+        pipe = peer.getNetPeerGroup().getPipeService().createOutputPipe(advertisement, TIMEOUT);
         return pipe;
     }
 
-    public void buscarAdvertisement(String busqueda, String nombre) throws IOException {
+    private void buscarAdvertisement(String busqueda, String nombre) throws IOException {
         buscarAdvertisementChat(busqueda, nombre);
-        this.timerBusqueda = new Timer(TIEMPO, new TimerBusquedaListener(busqueda, nombre));
+        this.timerBusqueda = new Timer(TIEMPO_BUSQUEDA, new TimerBusquedaListener(busqueda, nombre));
         if (!timerBusqueda.isRunning()) {
             timerBusqueda.start();
         }
     }
 
+    /* Busca advertisements remotos y actualiza los advertisements
+     * locales, de eso se encarga el metodo getRemoteAdvertisements()
+     */
     private void buscarAdvertisementChat(String busqueda, String nombre) throws IOException {
         this.outputPipes = new Vector<OutputPipe>(0,10);
-        // Busca advertisements remotos y actualiza los advertisements
-        // locales, de eso se encarga el metodo getRemoteAdvertisements()
         BusquedaListener busquedaListener = new BusquedaListener();
         String peerId = null; // Busca todos los peers
         int numeroAdvertisements = 1;
-        peerChat.getNetPeerGroup().getDiscoveryService().getRemoteAdvertisements(peerId, DiscoveryService.ADV, busqueda, nombre, numeroAdvertisements, busquedaListener);
-        // Busca advertisements locales
-        Enumeration<Advertisement> en = peerChat.getNetPeerGroup().getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, busqueda, nombre);
+        peer.getNetPeerGroup().getDiscoveryService().getRemoteAdvertisements(peerId, DiscoveryService.ADV, busqueda, nombre, numeroAdvertisements, busquedaListener);
+        Enumeration<Advertisement> en = peer.getNetPeerGroup().getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, busqueda, nombre);
         if (en != null) {
             while (en.hasMoreElements()) {
-                pipeAdvertisement = (PipeAdvertisement) en.nextElement();
-                if (pipeServidor.getID() != pipeAdvertisement.getID()) {
-                    // Crear el canal de comunicacion (outputPipe) y agregarlo al vector
-                    OutputPipe outputPipe = crearOuputPipe(pipeAdvertisement);
+                PipeAdvertisement adv = (PipeAdvertisement) en.nextElement();
+                if (pipeAdvertisementServidor.getID() != adv.getID()) {
+                    OutputPipe outputPipe = crearOuputPipe(adv);
                     if (outputPipe != null) {
                         outputPipes.addElement(outputPipe);
                     }
@@ -83,6 +81,19 @@ public class ChatCliente {
         }
     }
 
+    public void iniciar(String busqueda, String nombre, PipeAdvertisement pipeAdvertisementServidor) {
+        this.pipeAdvertisementServidor = pipeAdvertisementServidor;
+        try {
+            buscarAdvertisement(busqueda, nombre);
+        } catch (IOException ex) {
+            System.out.println("IOException: " + ex.getMessage());
+        }
+    }
+
+    public void detener() {
+        System.out.println("Cliente de chat terminado.");
+    }
+    
     public void enviarMensaje(String mensaje) throws IOException {
         Message message = new Message();
         StringMessageElement mensajeElement = new StringMessageElement("mensaje", mensaje, null);
@@ -96,25 +107,6 @@ public class ChatCliente {
         }
     }
 
-    public String getOutputPipeAdvs() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append("======================\n");
-        buffer.append("OutPipe Advertisements\n");
-        buffer.append("\n");
-        for (OutputPipe outputPipe : outputPipes) {
-            Advertisement adv = outputPipe.getAdvertisement();
-            buffer.append(adv.toString());
-            buffer.append("\n");
-        }
-        buffer.append("======================");
-        buffer.append("\n");
-        return buffer.toString();
-    }
-
-    /*************/
-    /* Listeners */
-    /*************/
-
     public class BusquedaListener implements DiscoveryListener {
         @Override
         public void discoveryEvent(DiscoveryEvent devent) {
@@ -124,8 +116,7 @@ public class ChatCliente {
                 while (responses.hasMoreElements()) {
                     // Muestro el advertisement encontrado
                     Advertisement adv = responses.nextElement();
-                    System.out.println("Se encontro un advertisement remoto " +
-                                       "de tipo: " + adv.getAdvType());
+                    System.out.println("Se encontro un advertisement remoto de tipo: " + adv.getAdvType());
                 }
             }            
         }
@@ -148,6 +139,21 @@ public class ChatCliente {
                 System.out.println("IOException: " + ioex.getMessage());
             }
         }
+    }
+
+    public String getOutputPipeAdvs() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("======================\n");
+        buffer.append("OutPipe Advertisements\n");
+        buffer.append("\n");
+        for (OutputPipe outputPipe : outputPipes) {
+            Advertisement adv = outputPipe.getAdvertisement();
+            buffer.append(adv.toString());
+            buffer.append("\n");
+        }
+        buffer.append("======================");
+        buffer.append("\n");
+        return buffer.toString();
     }
 
 }

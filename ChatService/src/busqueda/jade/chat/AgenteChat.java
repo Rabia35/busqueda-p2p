@@ -123,10 +123,10 @@ public class AgenteChat extends Agent {
     private class RegistrarServicioBehaviour extends OneShotBehaviour {
         @Override
         public void action() {
-            registrarServicio();
+            registrarServicio();            
         }
     }
-
+    
     private class BuscarAgenteGUIBehaviour extends TickerBehaviour {
         private boolean encontrado = false;
 
@@ -154,6 +154,11 @@ public class AgenteChat extends Agent {
         protected void onTick() {
             encontrado = buscarAgenteJXTA();
             if (encontrado) {
+                // Envia el mensaje para que publique el servicio
+                ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
+                acl.addReceiver(agenteJXTA);
+                acl.setContent(AgenteChat.NOMBRE_SERVICIO);
+                myAgent.send(acl);
                 this.stop();
             }
         }
@@ -169,7 +174,7 @@ public class AgenteChat extends Agent {
             ACLMessage acl = receive();
             if (acl != null) {
                 String mensaje = acl.getContent();
-                System.out.println(mensaje);
+                System.out.println("Procesar: " + mensaje);
                 if (acl.getPerformative() == ACLMessage.REQUEST) {
                     ACLMessage aclJXTA = new ACLMessage(ACLMessage.INFORM);
                     aclJXTA.addReceiver(agenteJXTA);

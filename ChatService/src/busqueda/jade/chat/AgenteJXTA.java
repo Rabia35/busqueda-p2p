@@ -134,26 +134,13 @@ public class AgenteJXTA extends Agent {
         public void action() {
             String mensaje = (String) myAgent.getO2AObject();
             if (mensaje != null) {
-                myAgent.addBehaviour(new EnviarMensajeBehaviour(mensaje));
+                ACLMessage acl = new ACLMessage(ACLMessage.INFORM);
+                acl.addReceiver(agenteChat);
+                acl.setContent(mensaje);
+                myAgent.send(acl);                
             } else {
                 this.block();
             }
-        }
-    }
-
-    public class EnviarMensajeBehaviour extends OneShotBehaviour {
-        private String mensaje;
-
-        public EnviarMensajeBehaviour(String mensaje) {
-            this.mensaje = mensaje;
-        }
-
-        @Override
-        public void action() {
-            ACLMessage acl = new ACLMessage(ACLMessage.INFORM);
-            acl.addReceiver(agenteChat);
-            acl.setContent(mensaje);
-            myAgent.send(acl);
         }
     }
 
@@ -164,7 +151,13 @@ public class AgenteJXTA extends Agent {
             ACLMessage acl = receive();
             if (acl != null) {
                 String mensaje = acl.getContent();
-                jxtaCommunicator.enviarMensajeChat(acl.getSender().getName() + " dice: " + mensaje);
+                if (acl.getPerformative() == ACLMessage.REQUEST &&
+                    mensaje.equals(AgenteChat.NOMBRE_SERVICIO)) {
+                    jxtaCommunicator.iniciarChat(AgenteChat.TIPO_SERVICIO,
+                                                 AgenteChat.DESCRIPCION_SERVICIO);
+                } else if (acl.getPerformative() == ACLMessage.INFORM) {
+                    jxtaCommunicator.enviarMensajeChat(acl.getSender().getName() + " dice: " + mensaje);
+                }
             } else {
                 block();
             }
