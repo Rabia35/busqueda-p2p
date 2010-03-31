@@ -2,7 +2,6 @@
 package busqueda;
 
 import busqueda.jade.JADEContainer;
-import gui.ChatGUI;
 import jade.wrapper.StaleProxyException;
 
 /**
@@ -15,12 +14,12 @@ public class JADECommunicator {
     // Manager de Agentes
     private JADEContainer jadeContainer;
     // Interfaz Grafica
-    private ChatGUI gui;
+    private GUICommunicator guiCommunicator;
 
-    public JADECommunicator(JXTACommunicator jxtaCommunicator, ChatGUI gui) {
+    public JADECommunicator(JXTACommunicator jxtaCommunicator, GUICommunicator guiCommunicator) {
         this.jxtaCommunicator = jxtaCommunicator;
         this.jadeContainer = new JADEContainer(this);
-        this.gui = gui;
+        this.guiCommunicator = guiCommunicator;
     }
 
     /**
@@ -62,7 +61,7 @@ public class JADECommunicator {
     }
 
     public void mostrarMensajeChat(final String mensaje) {
-        gui.mostrarMensaje(mensaje);
+        guiCommunicator.mostrarMensaje(mensaje);
     }
     
 }

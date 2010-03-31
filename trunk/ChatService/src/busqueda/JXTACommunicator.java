@@ -2,7 +2,6 @@
 package busqueda;
 
 import busqueda.jxta.PeerBusqueda;
-import gui.ChatGUI;
 import jade.wrapper.StaleProxyException;
 import java.io.IOException;
 
@@ -16,12 +15,12 @@ public class JXTACommunicator {
     // Peer
     private PeerBusqueda peer;
     // Interfaz Grafica
-    private ChatGUI gui;
+    private GUICommunicator guiCommunicator;
 
-    public JXTACommunicator(ChatGUI gui) {
+    public JXTACommunicator(GUICommunicator guiCommunicator) {
         this.jadeCommunicator = null;
         this.peer = new PeerBusqueda(this);
-        this.gui = gui;
+        this.guiCommunicator = guiCommunicator;
     }
 
     /**
