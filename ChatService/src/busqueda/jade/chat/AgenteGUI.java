@@ -1,7 +1,7 @@
 
 package busqueda.jade.chat;
 
-import busqueda.jade.JADEManager;
+import busqueda.jade.JADEContainer;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -23,7 +23,7 @@ public class AgenteGUI extends Agent {
     public static String TIPO_SERVICIO = "chat-gui";
     public static String DESCRIPCION_SERVICIO = "chat-gui-descripcion";
     // El manager que realiza la conexion con el JADE Communicator
-    private JADEManager jadeManager;
+    private JADEContainer jadeManager;
     // Agente del Chat
     private AID agenteChat;
 
@@ -32,7 +32,7 @@ public class AgenteGUI extends Agent {
         // Argumentos
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
-            jadeManager = (JADEManager) args[0];
+            jadeManager = (JADEContainer) args[0];
         } else {
             doDelete();
         }

@@ -1,6 +1,7 @@
 
 package busqueda.jxta;
 
+import busqueda.JXTACommunicator;
 import busqueda.jxta.chat.Chat;
 import jade.wrapper.StaleProxyException;
 import java.io.IOException;
@@ -16,8 +17,8 @@ import net.jxta.platform.NetworkManager;
 public class PeerBusqueda {
     // Datos del Servicio
     public static String BUSQUEDA = "Name";
-    // JXTA Manager
-    private JXTAManager jxtaManager;
+    // JXTA Communicator
+    private JXTACommunicator jxtaCommunicator;
     // Red
     private NetworkManager manager;
     private NetworkConfigurator configurator;
@@ -28,8 +29,8 @@ public class PeerBusqueda {
     private Chat chat;
 
 
-    public PeerBusqueda(JXTAManager jxtaManager) {
-        this.jxtaManager = jxtaManager;
+    public PeerBusqueda(JXTACommunicator jxtaCommunicator) {
+        this.jxtaCommunicator = jxtaCommunicator;
         this.manager = null;
         this.configurator = null;
         this.puerto = "9701";
@@ -44,7 +45,7 @@ public class PeerBusqueda {
         return netPeerGroup;
     }
 
-    public void configurarJXTA(String puerto) throws IOException {
+    private void configurarJXTA(String puerto) throws IOException {
         // Puerto
         this.puerto = puerto;
         // Configurar el Nodo dentro de la Red JXTA
@@ -59,6 +60,10 @@ public class PeerBusqueda {
         // Configuracion HTTP
         configurator.setHttpEnabled(true);
         configurator.setHttpOutgoing(true);
+    }
+
+    public void iniciarJXTA() {
+        iniciarJXTA(puerto);
     }
 
     public void iniciarJXTA(String puerto) {
@@ -102,7 +107,7 @@ public class PeerBusqueda {
 
     public void mostrarMensajeChat(String mensaje) {
         try {
-            jxtaManager.mostrarMensajeChat(mensaje);
+            jxtaCommunicator.mostrarMensajeChat(mensaje);
         } catch (StaleProxyException ex) {
             System.out.println("StaleProxyException: " + ex.getMessage());
         }
