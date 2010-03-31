@@ -84,7 +84,9 @@ public class PeerBusqueda {
     }
 
     public void terminarJXTA() {
+        detenerChat();
         manager.stopNetwork();
+        
     }
 
     public void iniciarChat(String nombre, String descripcion) {

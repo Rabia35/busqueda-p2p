@@ -62,6 +62,7 @@ public class ChatCliente {
      * locales, de eso se encarga el metodo getRemoteAdvertisements()
      */
     private void buscarAdvertisementChat(String busqueda, String nombre) throws IOException {
+        cerrarOutputPipes();
         this.outputPipes = new Vector<OutputPipe>(0,10);
         BusquedaListener busquedaListener = new BusquedaListener();
         String peerId = null; // Busca todos los peers
@@ -90,7 +91,16 @@ public class ChatCliente {
         }
     }
 
+    public void cerrarOutputPipes() {
+        for (OutputPipe outputPipe : outputPipes) {
+            if (outputPipe != null) {
+                outputPipe.close();
+            }
+        }
+    }
+
     public void detener() {
+        cerrarOutputPipes();
         System.out.println("Cliente de chat terminado.");
     }
     
