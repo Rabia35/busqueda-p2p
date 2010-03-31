@@ -73,6 +73,7 @@ public class ChatServidor {
 
     public void detener() {
         try {
+            inputPipe.close();
             peer.getNetPeerGroup().getDiscoveryService().flushAdvertisement(pipeAdvertisement);
         } catch (IOException ex) {
             System.out.println("IOException: " + ex.getMessage());
