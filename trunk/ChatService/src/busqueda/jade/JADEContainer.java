@@ -14,7 +14,7 @@ import jade.wrapper.StaleProxyException;
  *
  * @author almunoz
  */
-public class JADEManager {
+public class JADEContainer {
     // JADE Communicator
     private JADECommunicator jadeCommunicator;
     // Para iniciar la plataforma
@@ -27,7 +27,7 @@ public class JADEManager {
     private AgentController agenteChat;
     private AgentController agenteJXTA;
 
-    public JADEManager(JADECommunicator jadeCommunicator) {
+    public JADEContainer(JADECommunicator jadeCommunicator) {
         this.jadeCommunicator = jadeCommunicator;
         this.profile = null;
         this.puerto = "1099";

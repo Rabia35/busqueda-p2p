@@ -1,7 +1,7 @@
 
 package busqueda;
 
-import busqueda.jxta.JXTAManager;
+import busqueda.jxta.PeerBusqueda;
 import gui.ChatGUI;
 import jade.wrapper.StaleProxyException;
 import java.io.IOException;
@@ -13,14 +13,14 @@ import java.io.IOException;
 public class JXTACommunicator {
     // JADE Communicator
     private JADECommunicator jadeCommunicator;
-    // Manager de JXTA
-    private JXTAManager jxtaManager;
+    // Peer
+    private PeerBusqueda peer;
     // Interfaz Grafica
     private ChatGUI gui;
 
     public JXTACommunicator(ChatGUI gui) {
         this.jadeCommunicator = null;
-        this.jxtaManager = new JXTAManager(this);
+        this.peer = new PeerBusqueda(this);
         this.gui = gui;
     }
 
@@ -40,28 +40,28 @@ public class JXTACommunicator {
 
     public void iniciarJXTA(String puerto) {
         if (puerto != null ){
-            jxtaManager.iniciar(puerto);
+            peer.iniciarJXTA(puerto);
         } else {
-            jxtaManager.iniciar();
+            peer.iniciarJXTA();
         }
     }
 
     public void terminarJXTA() throws IOException {
-        jxtaManager.terminar();
+        peer.terminarJXTA();
     }
 
     /* METODOS PARA EL CHAT */
 
     public void iniciarChat(String nombre, String descripcion) {
-        jxtaManager.iniciarChat(nombre, descripcion);
+        peer.iniciarChat(nombre, descripcion);
     }
 
     public void detenerChat() {
-        jxtaManager.detenerChat();
+        peer.detenerChat();
     }
 
     public void enviarMensajeChat(final String mensaje) {
-        jxtaManager.enviarMensajeChat(mensaje);
+        peer.enviarMensajeChat(mensaje);
     }
 
     public void mostrarMensajeChat(String mensaje) throws StaleProxyException {
@@ -69,7 +69,7 @@ public class JXTACommunicator {
     }
 
     public String getAdvertisementsChat() {
-        return jxtaManager.getAdvertisementsChat();
+        return peer.getAdvertisementsChat();
     }
 
 }
