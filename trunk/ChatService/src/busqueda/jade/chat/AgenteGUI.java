@@ -132,26 +132,13 @@ public class AgenteGUI extends Agent {
         public void action() {
             String mensaje = (String) myAgent.getO2AObject();
             if (mensaje != null) {
-                myAgent.addBehaviour(new EnviarMensajeBehaviour(mensaje));
+                ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
+                acl.addReceiver(agenteChat);
+                acl.setContent(mensaje);
+                myAgent.send(acl);
             } else {
                 this.block();
             }
-        }
-    }
-
-    public class EnviarMensajeBehaviour extends OneShotBehaviour {
-        private String mensaje;
-
-        public EnviarMensajeBehaviour(String mensaje) {
-            this.mensaje = mensaje;
-        }
-
-        @Override
-        public void action() {
-            ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
-            acl.addReceiver(agenteChat);
-            acl.setContent(mensaje);
-            myAgent.send(acl);
         }
     }
 

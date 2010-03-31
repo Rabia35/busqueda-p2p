@@ -52,6 +52,14 @@ public class JXTACommunicator {
 
     /* METODOS PARA EL CHAT */
 
+    public void iniciarChat(String nombre, String descripcion) {
+        jxtaManager.iniciarChat(nombre, descripcion);
+    }
+
+    public void detenerChat() {
+        jxtaManager.detenerChat();
+    }
+
     public void enviarMensajeChat(final String mensaje) {
         jxtaManager.enviarMensajeChat(mensaje);
     }
