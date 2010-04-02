@@ -2,6 +2,9 @@
 package busqueda.jade.chat;
 
 import busqueda.jade.JADEContainer;
+import busqueda.jade.ontologias.mensaje.OntologiaMensaje;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -26,6 +29,10 @@ public class AgenteGUI extends Agent {
     private JADEContainer jadeManager;
     // Agente del Chat
     private AID agenteChat;
+    // Codec del Lenguaje de Contenido
+    private SLCodec codec;
+    // Ontologias
+    private Ontology ontologiaChat;
 
     @Override
     protected void setup() {
@@ -36,9 +43,16 @@ public class AgenteGUI extends Agent {
         } else {
             doDelete();
         }
-        System.out.println("El agente " + this.getName() + " se ha iniciado.");
+        // Content Language
+        codec = new SLCodec();
+        this.getContentManager().registerLanguage(codec);
+        // Ontologias
+        ontologiaChat = OntologiaMensaje.getInstance();
+        this.getContentManager().registerOntology(ontologiaChat);
         // Permite la comunicacion O2A: Object to Agent
         this.setEnabledO2ACommunication(true, 0);
+        // Mensaje de inicio
+        System.out.println("El agente " + this.getName() + " se ha iniciado.");
         // Comportamientos
         this.addBehaviour(new RegistrarServicioBehaviour());
         this.addBehaviour(new BuscarAgenteChatBehaviour(this, 5000));
