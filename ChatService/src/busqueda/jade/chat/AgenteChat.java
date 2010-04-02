@@ -1,6 +1,10 @@
 
 package busqueda.jade.chat;
 
+import busqueda.jade.ontologias.mensaje.OntologiaMensaje;
+import busqueda.jade.ontologias.servicio.OntologiaServicio;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -19,16 +23,30 @@ import jade.lang.acl.ACLMessage;
  */
 public class AgenteChat extends Agent {
     // Servicio
-    public static String NOMBRE_SERVICIO = "chat-service";
-    public static String TIPO_SERVICIO = "chat";
-    public static String DESCRIPCION_SERVICIO = "chat-descripcion";
-    // EL agente de la Interfaz Grafica
+    public static final String NOMBRE_SERVICIO = "chat-service";
+    public static final String TIPO_SERVICIO = "chat";
+    public static final String DESCRIPCION_SERVICIO = "chat-descripcion";
+    // El agente de la Interfaz Grafica
     private AID agenteGUI;
     // Para la Interfaz JXTA
     private AID agenteJXTA;
+    // Codec del Lenguaje de Contenido
+    private SLCodec codec;
+    // Ontologias
+    private Ontology ontologiaServicio;
+    private Ontology ontologiaChat;
 
     @Override
     protected void setup() {
+        // Content Language
+        codec = new SLCodec();
+        this.getContentManager().registerLanguage(codec);
+        // Ontologias
+        ontologiaServicio = OntologiaServicio.getInstance();
+        ontologiaChat = OntologiaMensaje.getInstance();
+        this.getContentManager().registerOntology(ontologiaServicio);
+        this.getContentManager().registerOntology(ontologiaChat);
+        // Mensaje de inicio
         System.out.println("El agente " + this.getName() + " se ha iniciado.");
         // Comportamientos
         this.addBehaviour(new RegistrarServicioBehaviour());
