@@ -91,11 +91,12 @@ public class ChatServidor {
                 return;
             }
             // Por nombre del elemento
+            MessageElement remitenteElement = message.getMessageElement("remitente");
             MessageElement mensajeElement  = message.getMessageElement("mensaje");
-            if (mensajeElement.toString() != null) {
-                peer.mostrarMensajeChat(mensajeElement.toString());
+            if (remitenteElement.toString() != null && mensajeElement.toString() != null) {
+                peer.mostrarMensajeChat(remitenteElement.toString(), mensajeElement.toString());
             } else {
-                peer.mostrarMensajeChat("No se encuentra el elemento <mensaje>.");
+                peer.mostrarMensajeChat("Error", "No se encuentra el elemento <mensaje>");
             }
         }
     }

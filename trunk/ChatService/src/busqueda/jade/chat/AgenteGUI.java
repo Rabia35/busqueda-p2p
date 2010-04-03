@@ -2,9 +2,16 @@
 package busqueda.jade.chat;
 
 import busqueda.jade.JADEContainer;
+import busqueda.jade.ontologias.mensaje.Enviar;
+import busqueda.jade.ontologias.mensaje.Mensaje;
+import busqueda.jade.ontologias.mensaje.Mostrar;
 import busqueda.jade.ontologias.mensaje.OntologiaMensaje;
+import jade.content.ContentElement;
+import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
+import jade.content.onto.UngroundedException;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -32,7 +39,7 @@ public class AgenteGUI extends Agent {
     // Codec del Lenguaje de Contenido
     private SLCodec codec;
     // Ontologias
-    private Ontology ontologiaChat;
+    private Ontology ontologiaMensaje;
 
     @Override
     protected void setup() {
@@ -47,17 +54,17 @@ public class AgenteGUI extends Agent {
         codec = new SLCodec();
         this.getContentManager().registerLanguage(codec);
         // Ontologias
-        ontologiaChat = OntologiaMensaje.getInstance();
-        this.getContentManager().registerOntology(ontologiaChat);
+        ontologiaMensaje = OntologiaMensaje.getInstance();
+        this.getContentManager().registerOntology(ontologiaMensaje);
         // Permite la comunicacion O2A: Object to Agent
         this.setEnabledO2ACommunication(true, 0);
         // Mensaje de inicio
         System.out.println("El agente " + this.getName() + " se ha iniciado.");
         // Comportamientos
-        this.addBehaviour(new RegistrarServicioBehaviour());
+        this.addBehaviour(new RegistrarServicioBehaviour(this));
         this.addBehaviour(new BuscarAgenteChatBehaviour(this, 5000));
-        this.addBehaviour(new EnviarMensajeO2ABehaviour());
-        this.addBehaviour(new RecibirMensajeBehaviour());
+        this.addBehaviour(new EnviarMensajeO2ABehaviour(this));
+        this.addBehaviour(new RecibirMensajeBehaviour(this));
     }
 
     @Override
@@ -119,6 +126,11 @@ public class AgenteGUI extends Agent {
     /*******************/
 
     private class RegistrarServicioBehaviour extends OneShotBehaviour {
+
+        public RegistrarServicioBehaviour(Agent agente) {
+            super(agente);
+        }
+        
         @Override
         public void action() {
             registrarServicio();
@@ -142,14 +154,36 @@ public class AgenteGUI extends Agent {
     }
 
     public class EnviarMensajeO2ABehaviour extends CyclicBehaviour {
+
+        public EnviarMensajeO2ABehaviour(Agent agente) {
+            super(agente);
+        }
+
         @Override
         public void action() {
-            String mensaje = (String) myAgent.getO2AObject();
-            if (mensaje != null) {
-                ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
-                acl.addReceiver(agenteChat);
-                acl.setContent(mensaje);
-                myAgent.send(acl);
+            String texto = (String) myAgent.getO2AObject();
+            if (texto != null) {
+                try {
+                    ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
+                    acl.setSender(myAgent.getAID());
+                    acl.addReceiver(agenteChat);
+                    acl.setLanguage(codec.getName());
+                    acl.setOntology(ontologiaMensaje.getName());
+                    // Mensaje
+                    Mensaje mensaje = new Mensaje();
+                    mensaje.setRemitente(myAgent.getContainerController().getName());
+                    mensaje.setMensaje(texto);
+                    // Predicado
+                    Enviar enviar = new Enviar();
+                    enviar.setMensaje(mensaje);
+                    // Rellena el contenido
+                    myAgent.getContentManager().fillContent(acl, enviar);
+                    myAgent.send(acl);
+                } catch (CodecException ex) {
+                    System.out.println("CodecException: " + ex.getMessage());
+                } catch (OntologyException ex) {
+                    System.out.println("OntologyException: " + ex.getMessage());
+                }
             } else {
                 this.block();
             }
@@ -157,13 +191,32 @@ public class AgenteGUI extends Agent {
     }
 
     public class RecibirMensajeBehaviour extends CyclicBehaviour {
+
+        public RecibirMensajeBehaviour(Agent agente) {
+            super(agente);
+        }
+
         @Override
         public void action() {
             // Para recibir el mensaje
             ACLMessage acl = receive();
             if (acl != null) {
-                String mensaje = acl.getContent();
-                jadeManager.mostrarMensajeChat(mensaje);
+                if (acl.getPerformative() == ACLMessage.REQUEST) {
+                    try {
+                        ContentElement elemento = myAgent.getContentManager().extractContent(acl);
+                        if (elemento instanceof Mostrar) {
+                            Mostrar mostrar = (Mostrar) elemento;
+                            Mensaje mensaje = mostrar.getMensaje();
+                            jadeManager.mostrarMensajeChat(mensaje.getRemitente(), mensaje.getMensaje());
+                        }
+                    } catch (CodecException ex) {
+                        System.out.println("CodecException: " + ex.getMessage());
+                    } catch (UngroundedException ex) {
+                        System.out.println("UngroundedException: " + ex.getMessage());
+                    } catch (OntologyException ex) {
+                        System.out.println("OntologyException: " + ex.getMessage());
+                    }
+                }
             } else {
                 block();
             }

@@ -38,8 +38,8 @@ public class Chat {
         cliente.detener();
     }
 
-    public void enviarMensaje(String mensaje) throws IOException {
-        cliente.enviarMensaje(mensaje);
+    public void enviarMensaje(String remitente, String mensaje) throws IOException {
+        cliente.enviarMensaje(remitente, mensaje);
     }
 
     public String getAdvertisements() {

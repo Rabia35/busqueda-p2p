@@ -104,9 +104,11 @@ public class ChatCliente {
         System.out.println("Cliente de chat terminado.");
     }
     
-    public void enviarMensaje(String mensaje) throws IOException {
+    public void enviarMensaje(String remitente, String mensaje) throws IOException {
         Message message = new Message();
+        StringMessageElement remitenteElement = new StringMessageElement("remitente", remitente, null);
         StringMessageElement mensajeElement = new StringMessageElement("mensaje", mensaje, null);
+        message.addMessageElement(remitenteElement);
         message.addMessageElement(mensajeElement);
         for (OutputPipe outputPipe : outputPipes) {
             if (outputPipe != null) {

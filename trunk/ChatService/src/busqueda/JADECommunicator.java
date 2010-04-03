@@ -56,12 +56,12 @@ public class JADECommunicator {
         jadeContainer.enviarMensajeChat(mensaje);
     }
     
-    public void recibirMensajeChat(String mensaje) throws StaleProxyException {
-        jadeContainer.recibirMensajeChat(mensaje);
+    public void recibirMensajeChat(String remitente, String mensaje) throws StaleProxyException {
+        jadeContainer.recibirMensajeChat(remitente, mensaje);
     }
 
-    public void mostrarMensajeChat(final String mensaje) {
-        guiCommunicator.mostrarMensaje(mensaje);
+    public void mostrarMensajeChat(String remitente, String mensaje) {
+        guiCommunicator.mostrarMensaje(remitente, mensaje);
     }
     
 }

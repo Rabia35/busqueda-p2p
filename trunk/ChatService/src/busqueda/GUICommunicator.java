@@ -73,8 +73,8 @@ public class GUICommunicator {
         jadeCommunicator.enviarMensajeChat(mensaje);
     }
 
-    public void mostrarMensaje(String mensaje) {
-        gui.mostrarMensaje(mensaje);
+    public void mostrarMensaje(String remitente, String mensaje) {
+        gui.mostrarMensaje(remitente, mensaje);
     }
 
 }

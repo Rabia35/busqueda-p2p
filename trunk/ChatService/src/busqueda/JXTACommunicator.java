@@ -59,12 +59,12 @@ public class JXTACommunicator {
         peer.detenerChat();
     }
 
-    public void enviarMensajeChat(final String mensaje) {
-        peer.enviarMensajeChat(mensaje);
+    public void enviarMensajeChat(String remitente, String mensaje) {
+        peer.enviarMensajeChat(remitente, mensaje);
     }
 
-    public void mostrarMensajeChat(String mensaje) throws StaleProxyException {
-        jadeCommunicator.recibirMensajeChat(mensaje);
+    public void mostrarMensajeChat(String remitente, String mensaje) throws StaleProxyException {
+        jadeCommunicator.recibirMensajeChat(remitente, mensaje);
     }
 
     public String getAdvertisementsChat() {
