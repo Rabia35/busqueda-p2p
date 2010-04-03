@@ -1,7 +1,8 @@
 
-package busqueda.jade.chat;
+package busqueda.jade.agentes;
 
 import busqueda.jade.JADEContainer;
+import busqueda.jade.agentes.chat.AgenteChat;
 import busqueda.jade.ontologias.mensaje.Enviar;
 import busqueda.jade.ontologias.mensaje.Mensaje;
 import busqueda.jade.ontologias.mensaje.Mostrar;

@@ -70,16 +70,16 @@ public class JADEContainer {
 
     public void crearAgentes() throws StaleProxyException {
         // Crea e inicia el agenteChat
-        agenteChat = crearAgente("chat", "busqueda.jade.chat.AgenteChat", null);
+        agenteChat = crearAgente("chat", "busqueda.jade.agentes.chat.AgenteChat", null);
         // Crea e inicia el agenteGUI
         Object[] argumentos = {this};
-        agenteGUI = crearAgente("gui", "busqueda.jade.chat.AgenteGUI", argumentos);
+        agenteGUI = crearAgente("gui", "busqueda.jade.agentes.AgenteGUI", argumentos);
     }
 
     public void crearAgentesJXTA(JXTACommunicator jxtaCommunicator) throws StaleProxyException {
         Object[] argumentos = {jxtaCommunicator};
         // Crea e inicia el agenteJXTA
-        agenteJXTA = crearAgente("jxta", "busqueda.jade.chat.AgenteJXTA", argumentos);
+        agenteJXTA = crearAgente("jxta", "busqueda.jade.agentes.AgenteJXTA", argumentos);
     }
 
     /* METODOS PARA EL CHAT */
