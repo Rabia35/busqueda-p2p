@@ -1,13 +1,13 @@
 
 package busqueda.jade.ontologias.servicio;
 
-import jade.content.AgentAction;
+import jade.content.Predicate;
 
 /**
  *
  * @author almunoz
  */
-public class Publicar implements AgentAction {
+public class Publicar implements Predicate {
     private Servicio servicio;
 
     public Publicar() {
