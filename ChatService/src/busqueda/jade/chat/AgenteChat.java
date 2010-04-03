@@ -1,15 +1,19 @@
 
 package busqueda.jade.chat;
 
+import busqueda.jade.ontologias.mensaje.Enviar;
+import busqueda.jade.ontologias.mensaje.Mostrar;
 import busqueda.jade.ontologias.mensaje.OntologiaMensaje;
 import busqueda.jade.ontologias.servicio.OntologiaServicio;
 import busqueda.jade.ontologias.servicio.Publicar;
 import busqueda.jade.ontologias.servicio.Servicio;
+import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
 import jade.content.onto.OntologyException;
+import jade.content.onto.UngroundedException;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -54,10 +58,10 @@ public class AgenteChat extends Agent {
         // Mensaje de inicio
         System.out.println("El agente " + this.getName() + " se ha iniciado.");
         // Comportamientos
-        this.addBehaviour(new RegistrarServicioBehaviour());
+        this.addBehaviour(new RegistrarServicioBehaviour(this));
         this.addBehaviour(new BuscarAgenteGUIBehaviour(this, 5000));
         this.addBehaviour(new BuscarAgenteJXTABehaviour(this, 5000));
-        this.addBehaviour(new RecibirMensajeBehaviour());
+        this.addBehaviour(new RecibirMensajeBehaviour(this));
     }
 
     @Override
@@ -144,6 +148,11 @@ public class AgenteChat extends Agent {
     /*******************/
 
     private class RegistrarServicioBehaviour extends OneShotBehaviour {
+
+        public RegistrarServicioBehaviour(Agent agente) {
+            super(agente);
+        }
+        
         @Override
         public void action() {
             registrarServicio();            
@@ -189,10 +198,10 @@ public class AgenteChat extends Agent {
                     servicio.setNombre(AgenteChat.NOMBRE_SERVICIO);
                     servicio.setTipo(AgenteChat.TIPO_SERVICIO);
                     servicio.setDescripcion(AgenteChat.DESCRIPCION_SERVICIO);
-                    // Accion
+                    // Predicado
                     Publicar publicar = new Publicar();
                     publicar.setServicio(servicio);
-                    // Coloca la accion en el mensaje
+                    // Coloca el predicado en el mensaje
                     myAgent.getContentManager().fillContent(acl, publicar);
                     myAgent.send(acl);
                     this.stop();
@@ -206,6 +215,11 @@ public class AgenteChat extends Agent {
     }
 
     public class RecibirMensajeBehaviour extends CyclicBehaviour {
+
+        public RecibirMensajeBehaviour(Agent agente) {
+            super(agente);
+        }
+        
         @Override
         public void action() {
             // Para recibir el mensaje, excepto el que el envia
@@ -214,42 +228,41 @@ public class AgenteChat extends Agent {
             // Para recibir el mensaje, dependiendo el tipo realizo la accion
             ACLMessage acl = receive();
             if (acl != null) {
-                String mensaje = acl.getContent();
-                System.out.println("Procesar: " + mensaje);
                 if (acl.getPerformative() == ACLMessage.REQUEST) {
-                    ACLMessage aclJXTA = new ACLMessage(ACLMessage.INFORM);
-                    aclJXTA.addReceiver(agenteJXTA);
-                    aclJXTA.setContent(mensaje);
-                    myAgent.send(aclJXTA);
-                } else if (acl.getPerformative() == ACLMessage.INFORM) {
-                    ACLMessage aclGUI = new ACLMessage(ACLMessage.INFORM);
-                    aclGUI.addReceiver(agenteGUI);
-                    aclGUI.setContent(mensaje);
-                    myAgent.send(aclGUI);
-                } else {
-                    // Crea la respuesta
-                    myAgent.addBehaviour(new EnviarRespuestaBehaviour(acl));
+                    try {
+                        ContentElement elemento = myAgent.getContentManager().extractContent(acl);
+                        if (elemento instanceof Enviar) {
+                            Enviar enviar = (Enviar) elemento;
+                            ACLMessage aclJXTA = new ACLMessage(ACLMessage.REQUEST);
+                            aclJXTA.setSender(myAgent.getAID());
+                            aclJXTA.addReceiver(agenteJXTA);
+                            aclJXTA.setLanguage(codec.getName());
+                            aclJXTA.setOntology(ontologiaMensaje.getName());
+                            // Rellena el contenido
+                            myAgent.getContentManager().fillContent(aclJXTA, enviar);
+                            myAgent.send(aclJXTA);
+                        } else if (elemento instanceof Mostrar) {
+                            Mostrar mostrar = (Mostrar) elemento;
+                            ACLMessage aclGUI = new ACLMessage(ACLMessage.REQUEST);
+                            aclGUI.setSender(myAgent.getAID());
+                            aclGUI.addReceiver(agenteGUI);
+                            aclGUI.setLanguage(codec.getName());
+                            aclGUI.setOntology(ontologiaMensaje.getName());
+                            // Rellena el contenido
+                            myAgent.getContentManager().fillContent(aclGUI, mostrar);
+                            myAgent.send(aclGUI);
+                        }
+                    } catch (CodecException ex) {
+                        System.out.println("CodecException: " + ex.getMessage());
+                    } catch (UngroundedException ex) {
+                        System.out.println("UngroundedException: " + ex.getMessage());
+                    } catch (OntologyException ex) {
+                        System.out.println("OntologyException: " + ex.getMessage());
+                    }
                 }
             } else {
                 this.block();
             }
-        }
-    }
-
-    public class EnviarRespuestaBehaviour extends OneShotBehaviour {
-        private ACLMessage acl;
-
-        public EnviarRespuestaBehaviour(ACLMessage acl) {
-            this.acl = acl;
-        }
-
-        @Override
-        public void action() {
-            // Crea la respuesta
-            ACLMessage reply = acl.createReply();
-            reply.setPerformative(ACLMessage.INFORM);
-            reply.setContent("No se pudo procesar el mensaje.");
-            myAgent.send(reply);
         }
     }
 

@@ -86,7 +86,6 @@ public class PeerBusqueda {
     public void terminarJXTA() {
         detenerChat();
         manager.stopNetwork();
-        
     }
 
     public void iniciarChat(String nombre, String descripcion) {
@@ -107,17 +106,17 @@ public class PeerBusqueda {
         }
     }
 
-    public void mostrarMensajeChat(String mensaje) {
+    public void mostrarMensajeChat(String remitente, String mensaje) {
         try {
-            jxtaCommunicator.mostrarMensajeChat(mensaje);
+            jxtaCommunicator.mostrarMensajeChat(remitente, mensaje);
         } catch (StaleProxyException ex) {
             System.out.println("StaleProxyException: " + ex.getMessage());
         }
     }
 
-    public void enviarMensajeChat(String mensaje) {
+    public void enviarMensajeChat(String remitente, String mensaje) {
         try {
-            chat.enviarMensaje(mensaje);
+            chat.enviarMensaje(remitente, mensaje);
         } catch (IOException ioex) {
             System.out.println("IOException: " + ioex.getMessage());
         }

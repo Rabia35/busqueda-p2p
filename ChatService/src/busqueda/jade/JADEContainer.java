@@ -3,6 +3,7 @@ package busqueda.jade;
 
 import busqueda.JADECommunicator;
 import busqueda.JXTACommunicator;
+import busqueda.jade.ontologias.mensaje.Mensaje;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -87,12 +88,15 @@ public class JADEContainer {
         agenteGUI.putO2AObject(mensaje, AgentController.ASYNC);
     }
 
-    public void mostrarMensajeChat(String mensaje) {
-        jadeCommunicator.mostrarMensajeChat(mensaje);
+    public void mostrarMensajeChat(String remitente, String mensaje) {
+        jadeCommunicator.mostrarMensajeChat(remitente, mensaje);
     }
 
-    public void recibirMensajeChat(String mensaje) throws StaleProxyException {
-        agenteJXTA.putO2AObject(mensaje, AgentController.ASYNC);
+    public void recibirMensajeChat(String remitente, String mensaje) throws StaleProxyException {
+        Mensaje msg = new Mensaje();
+        msg.setRemitente(remitente);
+        msg.setMensaje(mensaje);
+        agenteJXTA.putO2AObject(msg, AgentController.ASYNC);
     }
     
 }

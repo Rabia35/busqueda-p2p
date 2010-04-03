@@ -2,6 +2,9 @@
 package busqueda.jade.chat;
 
 import busqueda.JXTACommunicator;
+import busqueda.jade.ontologias.mensaje.Enviar;
+import busqueda.jade.ontologias.mensaje.Mensaje;
+import busqueda.jade.ontologias.mensaje.Mostrar;
 import busqueda.jade.ontologias.mensaje.OntologiaMensaje;
 import busqueda.jade.ontologias.servicio.OntologiaServicio;
 import busqueda.jade.ontologias.servicio.Publicar;
@@ -65,9 +68,9 @@ public class AgenteJXTA extends Agent {
         // Mensaje de inicio
         System.out.println("El agente " + this.getName() + " se ha iniciado.");
         // Comportamientos
-        this.addBehaviour(new RegistrarServicioBehaviour());
+        this.addBehaviour(new RegistrarServicioBehaviour(this));
         this.addBehaviour(new BuscarAgenteChatBehaviour(this, 5000));
-        this.addBehaviour(new EnviarMensajeO2ABehaviour());
+        this.addBehaviour(new EnviarMensajeO2ABehaviour(this));
         this.addBehaviour(new RecibirMensajeBehaviour(this));
     }
 
@@ -130,6 +133,11 @@ public class AgenteJXTA extends Agent {
     /*******************/
 
     private class RegistrarServicioBehaviour extends OneShotBehaviour {
+
+        public RegistrarServicioBehaviour(Agent agente) {
+            super(agente);
+        }
+
         @Override
         public void action() {
             registrarServicio();
@@ -153,14 +161,30 @@ public class AgenteJXTA extends Agent {
     }
 
     public class EnviarMensajeO2ABehaviour extends CyclicBehaviour {
+
+        public EnviarMensajeO2ABehaviour(Agent agente) {
+            super(agente);
+        }
+
         @Override
         public void action() {
-            String mensaje = (String) myAgent.getO2AObject();
+            Mensaje mensaje = (Mensaje) myAgent.getO2AObject();
             if (mensaje != null) {
-                ACLMessage acl = new ACLMessage(ACLMessage.INFORM);
-                acl.addReceiver(agenteChat);
-                acl.setContent(mensaje);
-                myAgent.send(acl);                
+                try {
+                    ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
+                    acl.setSender(myAgent.getAID());
+                    acl.addReceiver(agenteChat);
+                    acl.setLanguage(codec.getName());
+                    acl.setOntology(ontologiaMensaje.getName());
+                    Mostrar mostrar = new Mostrar();
+                    mostrar.setMensaje(mensaje);
+                    myAgent.getContentManager().fillContent(acl, mostrar);
+                    myAgent.send(acl);
+                } catch (CodecException ex) {
+                    System.out.println("CodecException: " + ex.getMessage());
+                } catch (OntologyException ex) {
+                    System.out.println("OntologyException: " + ex.getMessage());
+                }
             } else {
                 this.block();
             }
@@ -178,7 +202,6 @@ public class AgenteJXTA extends Agent {
             // Para recibir el mensaje, dependiendo el tipo realizo la accion en JXTA
             ACLMessage acl = receive();
             if (acl != null) {
-                String mensaje = acl.getContent();
                 if (acl.getPerformative() == ACLMessage.REQUEST) {
                     try {
                         ContentElement elemento = myAgent.getContentManager().extractContent(acl);
@@ -186,6 +209,10 @@ public class AgenteJXTA extends Agent {
                             Publicar publicar = (Publicar) elemento;
                             Servicio servicio = publicar.getServicio();
                             jxtaCommunicator.iniciarChat(servicio.getTipo(), servicio.getDescripcion());
+                        } else if (elemento instanceof Enviar) {
+                            Enviar enviar = (Enviar) elemento;
+                            Mensaje mensaje = enviar.getMensaje();
+                            jxtaCommunicator.enviarMensajeChat(mensaje.getRemitente(), mensaje.getMensaje());
                         }
                     } catch (CodecException ex) {
                         System.out.println("CodecException: " + ex.getMessage());
@@ -194,8 +221,6 @@ public class AgenteJXTA extends Agent {
                     } catch (OntologyException ex) {
                         System.out.println("OntologyException: " + ex.getMessage());
                     }
-                } else if (acl.getPerformative() == ACLMessage.INFORM) {
-                    jxtaCommunicator.enviarMensajeChat(acl.getSender().getName() + " dice: " + mensaje);
                 }
             } else {
                 block();

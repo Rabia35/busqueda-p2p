@@ -179,11 +179,11 @@ public class ChatGUI extends javax.swing.JFrame {
         }
     }
 
-    public void mostrarMensaje(final String mensaje) {
+    public void mostrarMensaje(final String remitente, final String mensaje) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                jTextAreaMensajes.append("\n" + mensaje);
+                jTextAreaMensajes.append("\n" + remitente + " dice: " + mensaje);
             }
         });
     }
