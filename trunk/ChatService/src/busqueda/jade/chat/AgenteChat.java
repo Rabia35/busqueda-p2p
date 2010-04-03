@@ -3,8 +3,13 @@ package busqueda.jade.chat;
 
 import busqueda.jade.ontologias.mensaje.OntologiaMensaje;
 import busqueda.jade.ontologias.servicio.OntologiaServicio;
+import busqueda.jade.ontologias.servicio.Publicar;
+import busqueda.jade.ontologias.servicio.Servicio;
+import jade.content.lang.Codec;
+import jade.content.lang.Codec.CodecException;
 import jade.content.lang.sl.SLCodec;
 import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -31,10 +36,10 @@ public class AgenteChat extends Agent {
     // Para la Interfaz JXTA
     private AID agenteJXTA;
     // Codec del Lenguaje de Contenido
-    private SLCodec codec;
+    private Codec codec;
     // Ontologias
     private Ontology ontologiaServicio;
-    private Ontology ontologiaChat;
+    private Ontology ontologiaMensaje;
 
     @Override
     protected void setup() {
@@ -43,9 +48,9 @@ public class AgenteChat extends Agent {
         this.getContentManager().registerLanguage(codec);
         // Ontologias
         ontologiaServicio = OntologiaServicio.getInstance();
-        ontologiaChat = OntologiaMensaje.getInstance();
+        ontologiaMensaje = OntologiaMensaje.getInstance();
         this.getContentManager().registerOntology(ontologiaServicio);
-        this.getContentManager().registerOntology(ontologiaChat);
+        this.getContentManager().registerOntology(ontologiaMensaje);
         // Mensaje de inicio
         System.out.println("El agente " + this.getName() + " se ha iniciado.");
         // Comportamientos
@@ -172,12 +177,30 @@ public class AgenteChat extends Agent {
         protected void onTick() {
             encontrado = buscarAgenteJXTA();
             if (encontrado) {
-                // Envia el mensaje para que publique el servicio
-                ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
-                acl.addReceiver(agenteJXTA);
-                acl.setContent(AgenteChat.NOMBRE_SERVICIO);
-                myAgent.send(acl);
-                this.stop();
+                try {
+                    // Envia el mensaje para publicar el servicio
+                    ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
+                    acl.setSender(myAgent.getAID());
+                    acl.addReceiver(agenteJXTA);
+                    acl.setLanguage(codec.getName());
+                    acl.setOntology(ontologiaServicio.getName());
+                    // Concepto
+                    Servicio servicio = new Servicio();
+                    servicio.setNombre(AgenteChat.NOMBRE_SERVICIO);
+                    servicio.setTipo(AgenteChat.TIPO_SERVICIO);
+                    servicio.setDescripcion(AgenteChat.DESCRIPCION_SERVICIO);
+                    // Accion
+                    Publicar publicar = new Publicar();
+                    publicar.setServicio(servicio);
+                    // Coloca la accion en el mensaje
+                    myAgent.getContentManager().fillContent(acl, publicar);
+                    myAgent.send(acl);
+                    this.stop();
+                } catch (CodecException ex) {
+                    System.out.println("CodecException: " + ex.getMessage());
+                } catch (OntologyException ex) {
+                    System.out.println("OntologyException: " + ex.getMessage());
+                }
             }
         }
     }

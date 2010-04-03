@@ -156,10 +156,14 @@ public class ChatCliente {
         buffer.append("======================\n");
         buffer.append("OutPipe Advertisements\n");
         buffer.append("\n");
-        for (OutputPipe outputPipe : outputPipes) {
-            Advertisement adv = outputPipe.getAdvertisement();
-            buffer.append(adv.toString());
-            buffer.append("\n");
+        if (outputPipes != null ) {
+            for (OutputPipe outputPipe : outputPipes) {
+                Advertisement adv = outputPipe.getAdvertisement();
+                buffer.append(adv.toString());
+                buffer.append("\n");
+            }
+        } else {
+            buffer.append("No se encontro el Pipe Advertisement.");
         }
         buffer.append("======================");
         buffer.append("\n");

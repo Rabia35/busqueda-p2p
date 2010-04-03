@@ -105,7 +105,11 @@ public class ChatServidor {
         buffer.append("=======================\n");
         buffer.append("InputPipe Advertisement\n");
         buffer.append("\n");
-        buffer.append(pipeAdvertisement.toString());
+        if (pipeAdvertisement != null ) {
+            buffer.append(pipeAdvertisement.toString());
+        } else {
+            buffer.append("No se encontro el Pipe Advertisement.");
+        }
         buffer.append("\n");
         buffer.append("=======================");
         buffer.append("\n");

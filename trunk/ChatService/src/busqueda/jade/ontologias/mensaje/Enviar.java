@@ -1,13 +1,13 @@
 
 package busqueda.jade.ontologias.mensaje;
 
-import jade.content.AgentAction;
+import jade.content.Predicate;
 
 /**
  *
  * @author almunoz
  */
-public class Enviar implements AgentAction {
+public class Enviar implements Predicate {
     private Mensaje mensaje;
 
     public Enviar() {

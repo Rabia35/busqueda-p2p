@@ -1,7 +1,6 @@
 
 package busqueda.jade.ontologias.servicio;
 
-import jade.content.onto.BasicOntology;
 import jade.content.onto.BeanOntology;
 import jade.content.onto.BeanOntologyException;
 import jade.content.onto.Ontology;
@@ -12,24 +11,26 @@ import jade.content.onto.Ontology;
  */
 public class OntologiaServicio extends BeanOntology {
     public static final String ONTOLOGY_NAME = "Ontologia Servicio";
-    private static Ontology instacia = new OntologiaServicio();
+    private static Ontology instacia;
 
     public static Ontology getInstance() {
+        if (instacia == null) {
+            instacia = new OntologiaServicio();
+        }
         return instacia;
     }
 
     private OntologiaServicio() {
-        super(ONTOLOGY_NAME, BasicOntology.getInstance());
+        super(ONTOLOGY_NAME);
         try {
             // Concepto
             this.add(Servicio.class);
-            // Acciones
+            // Predicados
             this.add(Publicar.class);
             this.add(Despublicar.class);
         } catch (BeanOntologyException ex) {
-            System.out.println("BeanOntologyException: " + ex.getMessage());
-        }
-        
+            System.out.println("OntologyException: " + ex.getMessage());
+        }        
     }
 
 }
