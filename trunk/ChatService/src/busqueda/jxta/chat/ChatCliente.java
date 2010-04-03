@@ -33,7 +33,7 @@ public class ChatCliente {
     private Vector<OutputPipe> outputPipes;
     private static long TIMEOUT = 5000; // 5 segundos
     // Timer, para buscar advertisements remotos cada cierto tiempo
-    private static int TIEMPO_BUSQUEDA = 30000; // 30 segundos
+    private static int TIEMPO_BUSQUEDA = 30000; // 10 segundos
     private Timer timerBusqueda;
 
     public ChatCliente(PeerBusqueda peer) {
@@ -104,14 +104,14 @@ public class ChatCliente {
         System.out.println("Cliente de chat terminado.");
     }
     
-    public void enviarMensaje(String remitente, String mensaje) throws IOException {
-        Message message = new Message();
-        StringMessageElement remitenteElement = new StringMessageElement("remitente", remitente, null);
-        StringMessageElement mensajeElement = new StringMessageElement("mensaje", mensaje, null);
-        message.addMessageElement(remitenteElement);
-        message.addMessageElement(mensajeElement);
+    public void enviarMensaje(String remitente, String mensaje) throws IOException {        
         for (OutputPipe outputPipe : outputPipes) {
             if (outputPipe != null) {
+                Message message = new Message();
+                StringMessageElement remitenteElement = new StringMessageElement("remitente", remitente, null);
+                StringMessageElement mensajeElement = new StringMessageElement("mensaje", mensaje, null);
+                message.addMessageElement(remitenteElement);
+                message.addMessageElement(mensajeElement);
                 outputPipe.send(message);
             } else {
                 System.out.println("El OutputPipe es null, no se puede enviar el mensaje");
