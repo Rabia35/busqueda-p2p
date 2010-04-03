@@ -1,7 +1,10 @@
 
-package busqueda.jade.chat;
+package busqueda.jade.agentes;
 
+import busqueda.JXTACommunicator;
+import busqueda.jade.agentes.chat.AgenteChat;
 import busqueda.jade.ontologias.mensaje.Enviar;
+import busqueda.jade.ontologias.mensaje.Mensaje;
 import busqueda.jade.ontologias.mensaje.Mostrar;
 import busqueda.jade.ontologias.mensaje.OntologiaMensaje;
 import busqueda.jade.ontologias.servicio.OntologiaServicio;
@@ -30,15 +33,14 @@ import jade.lang.acl.ACLMessage;
  *
  * @author almunoz
  */
-public class AgenteChat extends Agent {
-    // Servicio
-    public static final String NOMBRE_SERVICIO = "chat-service";
-    public static final String TIPO_SERVICIO = "chat";
-    public static final String DESCRIPCION_SERVICIO = "chat-descripcion";
-    // El agente de la Interfaz Grafica
-    private AID agenteGUI;
-    // Para la Interfaz JXTA
-    private AID agenteJXTA;
+public class AgenteJXTA extends Agent {
+    public static String NOMBRE_SERVICIO = "chat-jxta-service";
+    public static String TIPO_SERVICIO = "chat-jxta";
+    public static String DESCRIPCION_SERVICIO = "chat-jxta-descripcion";
+    // El JXTA Communicator, para comunicarse con el peer
+    private JXTACommunicator jxtaCommunicator;
+    // Agente del Chat
+    private AID agenteChat;
     // Codec del Lenguaje de Contenido
     private Codec codec;
     // Ontologias
@@ -47,6 +49,13 @@ public class AgenteChat extends Agent {
 
     @Override
     protected void setup() {
+        // Argumentos
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+            jxtaCommunicator = (JXTACommunicator) args[0];
+        } else {
+            doDelete();
+        }
         // Content Language
         codec = new SLCodec();
         this.getContentManager().registerLanguage(codec);
@@ -55,12 +64,14 @@ public class AgenteChat extends Agent {
         ontologiaMensaje = OntologiaMensaje.getInstance();
         this.getContentManager().registerOntology(ontologiaServicio);
         this.getContentManager().registerOntology(ontologiaMensaje);
+        // Permite la comunicacion O2A: Object to Agent
+        this.setEnabledO2ACommunication(true, 0);
         // Mensaje de inicio
         System.out.println("El agente " + this.getName() + " se ha iniciado.");
         // Comportamientos
         this.addBehaviour(new RegistrarServicioBehaviour(this));
-        this.addBehaviour(new BuscarAgenteGUIBehaviour(this, 5000));
-        this.addBehaviour(new BuscarAgenteJXTABehaviour(this, 5000));
+        this.addBehaviour(new BuscarAgenteChatBehaviour(this, 5000));
+        this.addBehaviour(new EnviarMensajeO2ABehaviour(this));
         this.addBehaviour(new RecibirMensajeBehaviour(this));
     }
 
@@ -72,17 +83,15 @@ public class AgenteChat extends Agent {
 
     private void registrarServicio() {
         try {
-            // Crea la descripcion del agente
             DFAgentDescription dfad = new DFAgentDescription();
             dfad.setName(getAID());
-            // Crea la descripcion del servicio
             ServiceDescription sd = new ServiceDescription();
-            sd.setName(AgenteChat.NOMBRE_SERVICIO);
-            sd.setType(AgenteChat.TIPO_SERVICIO);
+            sd.setName(AgenteJXTA.NOMBRE_SERVICIO);
+            sd.setType(AgenteJXTA.TIPO_SERVICIO);
             dfad.addServices(sd);
-            // Registrar la descripcion del agente en el DF
+            // Registrar la descripcion en el DF
             DFService.register(this, dfad);
-            System.out.println("El servicio " + AgenteChat.NOMBRE_SERVICIO + " se ha registrado.");
+            System.out.println("El servicio " + AgenteJXTA.NOMBRE_SERVICIO + " se ha registrado.");
         } catch (FIPAException fex) {
             System.out.println("FIPAException: " + fex.getMessage());
         }
@@ -91,18 +100,18 @@ public class AgenteChat extends Agent {
     private void deregistrarServicio() {
         try {
             DFService.deregister(this);
-            System.out.println("El servicio " + AgenteChat.NOMBRE_SERVICIO + " ya no esta registrado.");
+            System.out.println("El servicio " + AgenteJXTA.NOMBRE_SERVICIO + " ya no esta registrado.");
         } catch (FIPAException fex) {
             System.out.println("FIPAException: " + fex.getMessage());
         }
     }
 
-    private boolean buscarAgenteGUI() {
+    private boolean buscarAgenteChat() {
         try {
             // Build the description used as template for the search
             DFAgentDescription templateDfad = new DFAgentDescription();
             ServiceDescription templateSd = new ServiceDescription();
-            templateSd.setType(AgenteGUI.TIPO_SERVICIO);
+            templateSd.setType(AgenteChat.TIPO_SERVICIO);
             templateDfad.addServices(templateSd);
 
             SearchConstraints sc = new SearchConstraints();
@@ -110,36 +119,13 @@ public class AgenteChat extends Agent {
 
             DFAgentDescription[] results = DFService.search(this, templateDfad, sc);
             if (results.length > 0) {
-                agenteGUI = results[0].getName();
+                agenteChat = results[0].getName();
                 return true;
             }
         } catch (FIPAException fex) {
             System.out.println("FIPAException: " + fex.getMessage());
         }
-        System.out.println("El agente " + getLocalName() + " no encontro ningun servicio de interfaz grafica.");
-        return false;
-    }
-
-    private boolean buscarAgenteJXTA() {
-        try {
-            // Build the description used as template for the search
-            DFAgentDescription templateDfad = new DFAgentDescription();
-            ServiceDescription templateSd = new ServiceDescription();
-            templateSd.setType(AgenteJXTA.TIPO_SERVICIO);
-            templateDfad.addServices(templateSd);
-
-            SearchConstraints sc = new SearchConstraints();
-            sc.setMaxResults(new Long(1));
-
-            DFAgentDescription[] results = DFService.search(this, templateDfad, sc);
-            if (results.length > 0) {
-                agenteJXTA = results[0].getName();
-                return true;
-            }
-        } catch (FIPAException fex) {
-            System.out.println("FIPAException: " + fex.getMessage());
-        }
-        System.out.println("El agente " + getLocalName() + " no encontro ningun servicio de JXTA.");
+        System.out.println("El agente " + getLocalName() + " no encontro ningun servicio de chat.");
         return false;
     }
 
@@ -152,64 +138,56 @@ public class AgenteChat extends Agent {
         public RegistrarServicioBehaviour(Agent agente) {
             super(agente);
         }
-        
+
         @Override
         public void action() {
-            registrarServicio();            
+            registrarServicio();
         }
     }
-    
-    private class BuscarAgenteGUIBehaviour extends TickerBehaviour {
+
+    private class BuscarAgenteChatBehaviour extends TickerBehaviour {
         private boolean encontrado = false;
 
-        public BuscarAgenteGUIBehaviour(Agent agente, long periodo) {
+        public BuscarAgenteChatBehaviour(Agent agente, long periodo) {
             super(agente, periodo);
         }
 
         @Override
         protected void onTick() {
-            encontrado = buscarAgenteGUI();
+            encontrado = buscarAgenteChat();
             if (encontrado) {
                 this.stop();
             }
         }
     }
 
-    private class BuscarAgenteJXTABehaviour extends TickerBehaviour {
-        private boolean encontrado = false;
+    public class EnviarMensajeO2ABehaviour extends CyclicBehaviour {
 
-        public BuscarAgenteJXTABehaviour(Agent agente, long periodo) {
-            super(agente, periodo);
+        public EnviarMensajeO2ABehaviour(Agent agente) {
+            super(agente);
         }
 
         @Override
-        protected void onTick() {
-            encontrado = buscarAgenteJXTA();
-            if (encontrado) {
+        public void action() {
+            Mensaje mensaje = (Mensaje) myAgent.getO2AObject();
+            if (mensaje != null) {
                 try {
-                    // Envia el mensaje para publicar el servicio
                     ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
                     acl.setSender(myAgent.getAID());
-                    acl.addReceiver(agenteJXTA);
+                    acl.addReceiver(agenteChat);
                     acl.setLanguage(codec.getName());
-                    acl.setOntology(ontologiaServicio.getName());
-                    // Concepto
-                    Servicio servicio = new Servicio();
-                    servicio.setNombre(AgenteChat.NOMBRE_SERVICIO);
-                    servicio.setTipo(AgenteChat.TIPO_SERVICIO);
-                    servicio.setDescripcion(AgenteChat.DESCRIPCION_SERVICIO);
-                    // Predicado
-                    Publicar publicar = new Publicar();
-                    publicar.setServicio(servicio);
-                    // Coloca el predicado en el mensaje
-                    myAgent.getContentManager().fillContent(acl, publicar);
+                    acl.setOntology(ontologiaMensaje.getName());
+                    Mostrar mostrar = new Mostrar();
+                    mostrar.setMensaje(mensaje);
+                    myAgent.getContentManager().fillContent(acl, mostrar);
                     myAgent.send(acl);
-                    this.stop();
                 } catch (CodecException ex) {
                     System.out.println("CodecException: " + ex.getMessage());
                 } catch (OntologyException ex) {
                     System.out.println("OntologyException: " + ex.getMessage());
                 }
+            } else {
+                this.block();
             }
         }
     }
@@ -219,38 +197,23 @@ public class AgenteChat extends Agent {
         public RecibirMensajeBehaviour(Agent agente) {
             super(agente);
         }
-        
+
         @Override
         public void action() {
-            // Para recibir el mensaje, excepto el que el envia
-            //MessageTemplate mt = MessageTemplate.not(MessageTemplate.MatchSender(myAgent.getAID()));
-            //ACLMessage acl = receive(mt);
-            // Para recibir el mensaje, dependiendo el tipo realizo la accion
+            // Para recibir el mensaje, dependiendo el tipo realizo la accion en JXTA
             ACLMessage acl = receive();
             if (acl != null) {
                 if (acl.getPerformative() == ACLMessage.REQUEST) {
                     try {
                         ContentElement elemento = myAgent.getContentManager().extractContent(acl);
-                        if (elemento instanceof Enviar) {
+                        if (elemento instanceof Publicar) {
+                            Publicar publicar = (Publicar) elemento;
+                            Servicio servicio = publicar.getServicio();
+                            jxtaCommunicator.iniciarChat(servicio.getTipo(), servicio.getDescripcion());
+                        } else if (elemento instanceof Enviar) {
                             Enviar enviar = (Enviar) elemento;
-                            ACLMessage aclJXTA = new ACLMessage(ACLMessage.REQUEST);
-                            aclJXTA.setSender(myAgent.getAID());
-                            aclJXTA.addReceiver(agenteJXTA);
-                            aclJXTA.setLanguage(codec.getName());
-                            aclJXTA.setOntology(ontologiaMensaje.getName());
-                            // Rellena el contenido
-                            myAgent.getContentManager().fillContent(aclJXTA, enviar);
-                            myAgent.send(aclJXTA);
-                        } else if (elemento instanceof Mostrar) {
-                            Mostrar mostrar = (Mostrar) elemento;
-                            ACLMessage aclGUI = new ACLMessage(ACLMessage.REQUEST);
-                            aclGUI.setSender(myAgent.getAID());
-                            aclGUI.addReceiver(agenteGUI);
-                            aclGUI.setLanguage(codec.getName());
-                            aclGUI.setOntology(ontologiaMensaje.getName());
-                            // Rellena el contenido
-                            myAgent.getContentManager().fillContent(aclGUI, mostrar);
-                            myAgent.send(aclGUI);
+                            Mensaje mensaje = enviar.getMensaje();
+                            jxtaCommunicator.enviarMensajeChat(mensaje.getRemitente(), mensaje.getMensaje());
                         }
                     } catch (CodecException ex) {
                         System.out.println("CodecException: " + ex.getMessage());
@@ -261,7 +224,7 @@ public class AgenteChat extends Agent {
                     }
                 }
             } else {
-                this.block();
+                block();
             }
         }
     }
