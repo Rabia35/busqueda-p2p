@@ -5,6 +5,7 @@
 
 package busqueda;
 
+import busqueda.utilidades.Utilidades;
 import gui.ChatGUI;
 import jade.wrapper.StaleProxyException;
 import java.io.IOException;
@@ -63,6 +64,9 @@ public class GUICommunicator {
     public void salir() throws StaleProxyException, IOException {
         jadeCommunicator.terminarJADE();
         jxtaCommunicator.terminarJXTA();
+        Utilidades.eliminarCache(Utilidades.JADE_MTP);
+        Utilidades.eliminarCache(Utilidades.JADE_AP);
+        Utilidades.eliminarCache(Utilidades.JXTA_CACHE);
     }
 
     public String getAdvertisementsChat() {
