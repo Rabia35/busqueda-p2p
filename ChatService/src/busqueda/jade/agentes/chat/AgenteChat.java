@@ -1,8 +1,10 @@
 
 package busqueda.jade.agentes.chat;
 
+import busqueda.jade.JADEContainer;
 import busqueda.jade.agentes.AgenteJXTA;
 import busqueda.jade.agentes.AgenteGUI;
+import busqueda.jade.comportamientos.RegistrarServicioBehaviour;
 import busqueda.jade.ontologias.mensaje.Enviar;
 import busqueda.jade.ontologias.mensaje.Mostrar;
 import busqueda.jade.ontologias.mensaje.OntologiaMensaje;
@@ -19,12 +21,8 @@ import jade.content.onto.UngroundedException;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.SearchConstraints;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
@@ -60,7 +58,7 @@ public class AgenteChat extends Agent {
         // Mensaje de inicio
         System.out.println("El agente " + this.getName() + " se ha iniciado.");
         // Comportamientos
-        this.addBehaviour(new RegistrarServicioBehaviour(this));
+        this.addBehaviour(new RegistrarServicioBehaviour(this, AgenteChat.NOMBRE_SERVICIO, AgenteChat.TIPO_SERVICIO));
         this.addBehaviour(new BuscarAgenteGUIBehaviour(this, 5000));
         this.addBehaviour(new BuscarAgenteJXTABehaviour(this, 5000));
         this.addBehaviour(new RecibirMensajeBehaviour(this));
@@ -72,24 +70,6 @@ public class AgenteChat extends Agent {
         System.out.println("El agente " + this.getName() + " ha terminado.");
     }
 
-    private void registrarServicio() {
-        try {
-            // Crea la descripcion del agente
-            DFAgentDescription dfad = new DFAgentDescription();
-            dfad.setName(getAID());
-            // Crea la descripcion del servicio
-            ServiceDescription sd = new ServiceDescription();
-            sd.setName(AgenteChat.NOMBRE_SERVICIO);
-            sd.setType(AgenteChat.TIPO_SERVICIO);
-            dfad.addServices(sd);
-            // Registrar la descripcion del agente en el DF
-            DFService.register(this, dfad);
-            System.out.println("El servicio " + AgenteChat.NOMBRE_SERVICIO + " se ha registrado.");
-        } catch (FIPAException fex) {
-            System.out.println("FIPAException: " + fex.getMessage());
-        }
-    }
-
     private void deregistrarServicio() {
         try {
             DFService.deregister(this);
@@ -99,70 +79,11 @@ public class AgenteChat extends Agent {
         }
     }
 
-    private boolean buscarAgenteGUI() {
-        try {
-            // Build the description used as template for the search
-            DFAgentDescription templateDfad = new DFAgentDescription();
-            ServiceDescription templateSd = new ServiceDescription();
-            templateSd.setType(AgenteGUI.TIPO_SERVICIO);
-            templateDfad.addServices(templateSd);
-
-            SearchConstraints sc = new SearchConstraints();
-            sc.setMaxResults(new Long(1));
-
-            DFAgentDescription[] results = DFService.search(this, templateDfad, sc);
-            if (results.length > 0) {
-                agenteGUI = results[0].getName();
-                return true;
-            }
-        } catch (FIPAException fex) {
-            System.out.println("FIPAException: " + fex.getMessage());
-        }
-        System.out.println("El agente " + getLocalName() + " no encontro ningun servicio de interfaz grafica.");
-        return false;
-    }
-
-    private boolean buscarAgenteJXTA() {
-        try {
-            // Build the description used as template for the search
-            DFAgentDescription templateDfad = new DFAgentDescription();
-            ServiceDescription templateSd = new ServiceDescription();
-            templateSd.setType(AgenteJXTA.TIPO_SERVICIO);
-            templateDfad.addServices(templateSd);
-
-            SearchConstraints sc = new SearchConstraints();
-            sc.setMaxResults(new Long(1));
-
-            DFAgentDescription[] results = DFService.search(this, templateDfad, sc);
-            if (results.length > 0) {
-                agenteJXTA = results[0].getName();
-                return true;
-            }
-        } catch (FIPAException fex) {
-            System.out.println("FIPAException: " + fex.getMessage());
-        }
-        System.out.println("El agente " + getLocalName() + " no encontro ningun servicio de JXTA.");
-        return false;
-    }
-
     /*******************/
     /* COMPORTAMIENTOS */
     /*******************/
 
-    private class RegistrarServicioBehaviour extends OneShotBehaviour {
-
-        public RegistrarServicioBehaviour(Agent agente) {
-            super(agente);
-        }
-        
-        @Override
-        public void action() {
-            registrarServicio();            
-        }
-    }
-    
     private class BuscarAgenteGUIBehaviour extends TickerBehaviour {
-        private boolean encontrado = false;
 
         public BuscarAgenteGUIBehaviour(Agent agente, long periodo) {
             super(agente, periodo);
@@ -170,24 +91,23 @@ public class AgenteChat extends Agent {
 
         @Override
         protected void onTick() {
-            encontrado = buscarAgenteGUI();
-            if (encontrado) {
+            agenteGUI = JADEContainer.buscarAgente(myAgent, AgenteGUI.TIPO_SERVICIO);
+            if (agenteGUI != null) {
                 this.stop();
             }
         }
     }
 
     private class BuscarAgenteJXTABehaviour extends TickerBehaviour {
-        private boolean encontrado = false;
-
+        
         public BuscarAgenteJXTABehaviour(Agent agente, long periodo) {
             super(agente, periodo);
         }
 
         @Override
         protected void onTick() {
-            encontrado = buscarAgenteJXTA();
-            if (encontrado) {
+            agenteJXTA = JADEContainer.buscarAgente(myAgent, AgenteJXTA.TIPO_SERVICIO);
+            if (agenteJXTA != null) {
                 try {
                     // Envia el mensaje para publicar el servicio
                     ACLMessage acl = new ACLMessage(ACLMessage.REQUEST);
@@ -216,7 +136,7 @@ public class AgenteChat extends Agent {
         }
     }
 
-    public class RecibirMensajeBehaviour extends CyclicBehaviour {
+    private class RecibirMensajeBehaviour extends CyclicBehaviour {
 
         public RecibirMensajeBehaviour(Agent agente) {
             super(agente);

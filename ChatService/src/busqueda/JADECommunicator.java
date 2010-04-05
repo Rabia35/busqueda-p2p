@@ -9,6 +9,8 @@ import jade.wrapper.StaleProxyException;
  * @author almunoz
  */
 public class JADECommunicator {
+    // La instacia de la clase
+    private static JADECommunicator instancia;
     // JXTA Communicator
     private JXTACommunicator jxtaCommunicator;
     // Manager de Agentes
@@ -16,17 +18,17 @@ public class JADECommunicator {
     // Interfaz Grafica
     private GUICommunicator guiCommunicator;
 
-    public JADECommunicator(JXTACommunicator jxtaCommunicator, GUICommunicator guiCommunicator) {
-        this.jxtaCommunicator = jxtaCommunicator;
-        this.jadeContainer = new JADEContainer(this);
-        this.guiCommunicator = guiCommunicator;
+    public static JADECommunicator getInstance() {
+        if (instancia == null) {
+            instancia = new JADECommunicator();
+        }
+        return instancia;
     }
 
-    /**
-     * @return the jxtaCommunicator
-     */
-    public JXTACommunicator getJxtaCommunicator() {
-        return jxtaCommunicator;
+    private JADECommunicator() {
+        this.jxtaCommunicator = null;
+        this.jadeContainer = new JADEContainer(this);
+        this.guiCommunicator = null;
     }
 
     /**
@@ -34,6 +36,13 @@ public class JADECommunicator {
      */
     public void setJxtaCommunicator(JXTACommunicator jxtaCommunicator) {
         this.jxtaCommunicator = jxtaCommunicator;
+    }
+
+    /**
+     * @param guiCommunicator the guiCommunicator to set
+     */
+    public void setGuiCommunicator(GUICommunicator guiCommunicator) {
+        this.guiCommunicator = guiCommunicator;
     }
 
     public void iniciarJADE(String puerto) throws StaleProxyException {

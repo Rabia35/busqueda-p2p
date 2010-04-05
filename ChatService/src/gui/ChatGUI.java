@@ -16,7 +16,8 @@ public class ChatGUI extends javax.swing.JFrame {
     /** Creates new form ChatGUI */
     public ChatGUI(String args[]) {
         initComponents();
-        this.guiCommunicator = new GUICommunicator(this);
+        this.guiCommunicator = GUICommunicator.getInstance();
+        this.guiCommunicator.setGui(this);
         this.guiCommunicator.iniciar(args);
     }
 
