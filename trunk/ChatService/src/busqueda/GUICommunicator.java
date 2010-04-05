@@ -15,6 +15,8 @@ import java.io.IOException;
  * @author almunoz
  */
 public class GUICommunicator {
+    // La instacia de la clase
+    private static GUICommunicator instancia;
     // Interfaz Grafica
     private ChatGUI gui;
     // JXTA Communicator
@@ -25,12 +27,30 @@ public class GUICommunicator {
     private String jxtaPort;
     private String jadePort;
 
-    public GUICommunicator(ChatGUI gui) {
-        this.gui = gui;
-        this.jxtaCommunicator = null;
-        this.jadeCommunicator = null;
+    public static GUICommunicator getInstance() {
+        if (instancia == null) {
+            instancia = new GUICommunicator();
+        }
+        return instancia;
+    }
+
+    private GUICommunicator() {
+        this.gui = null;
+        this.jxtaCommunicator = JXTACommunicator.getInstance();
+        this.jadeCommunicator = JADECommunicator.getInstance();
+        this.jxtaCommunicator.setGuiCommunicator(this);
+        this.jxtaCommunicator.setJadeCommunicator(jadeCommunicator);
+        this.jadeCommunicator.setGuiCommunicator(this);
+        this.jadeCommunicator.setJxtaCommunicator(jxtaCommunicator);
         this.jxtaPort = null;
         this.jadePort = null;
+    }
+
+    /**
+     * @param gui the gui to set
+     */
+    public void setGui(ChatGUI gui) {
+        this.gui = gui;
     }
 
     public void extraerArgumentos(String args[]) {
@@ -47,9 +67,9 @@ public class GUICommunicator {
     public void iniciar(String args[]) {
         try {
             extraerArgumentos(args);
-            jxtaCommunicator = new JXTACommunicator(this);
-            jadeCommunicator = new JADECommunicator(jxtaCommunicator, this);
-            jxtaCommunicator.setJadeCommunicator(jadeCommunicator);
+            //jxtaCommunicator = JXTACommunicator.getInstance();
+            //jadeCommunicator = JADECommunicator.getInstance();
+            //jxtaCommunicator.setJadeCommunicator(jadeCommunicator);
             // Iniciar JXTA
             jxtaCommunicator.iniciarJXTA(jxtaPort);
             // Iniciar JADE

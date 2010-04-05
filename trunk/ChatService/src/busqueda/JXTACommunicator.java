@@ -10,6 +10,8 @@ import java.io.IOException;
  * @author almunoz
  */
 public class JXTACommunicator {
+    // La instacia de la clase
+    private static JXTACommunicator instancia;
     // JADE Communicator
     private JADECommunicator jadeCommunicator;
     // Peer
@@ -17,17 +19,17 @@ public class JXTACommunicator {
     // Interfaz Grafica
     private GUICommunicator guiCommunicator;
 
-    public JXTACommunicator(GUICommunicator guiCommunicator) {
-        this.jadeCommunicator = null;
-        this.peer = new PeerBusqueda(this);
-        this.guiCommunicator = guiCommunicator;
+    public static JXTACommunicator getInstance() {
+        if (instancia == null) {
+            instancia = new JXTACommunicator();
+        }
+        return instancia;
     }
 
-    /**
-     * @return the jadeCommunicator
-     */
-    public JADECommunicator getJadeCommunicator() {
-        return jadeCommunicator;
+    private JXTACommunicator() {
+        this.jadeCommunicator = null;
+        this.peer = new PeerBusqueda(this);
+        this.guiCommunicator = null;
     }
 
     /**
@@ -35,6 +37,13 @@ public class JXTACommunicator {
      */
     public void setJadeCommunicator(JADECommunicator jadeCommunicator) {
         this.jadeCommunicator = jadeCommunicator;
+    }
+
+    /**
+     * @param guiCommunicator the guiCommunicator to set
+     */
+    public void setGuiCommunicator(GUICommunicator guiCommunicator) {
+        this.guiCommunicator = guiCommunicator;
     }
 
     public void iniciarJXTA(String puerto) {
