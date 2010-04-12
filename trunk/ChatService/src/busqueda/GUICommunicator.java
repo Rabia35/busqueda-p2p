@@ -22,6 +22,8 @@ public class GUICommunicator {
     // Puertos
     private String jxtaPort;
     private String jadePort;
+    // Cliente de chat
+    private boolean server;
 
     public static GUICommunicator getInstance() {
         if (instancia == null) {
@@ -40,6 +42,7 @@ public class GUICommunicator {
         this.jadeCommunicator.setJxtaCommunicator(jxtaCommunicator);
         this.jxtaPort = null;
         this.jadePort = null;
+        this.server = true;
     }
 
     /**
@@ -57,15 +60,15 @@ public class GUICommunicator {
             if (args[index].equals("-jxtaport")) {
                 this.jxtaPort = args[index + 1];
             }
+            if (args[index].equals("-cliente")) {
+                this.server = false;
+            }
         }
     }
 
     public void iniciar(String args[]) {
         try {
             extraerArgumentos(args);
-            //jxtaCommunicator = JXTACommunicator.getInstance();
-            //jadeCommunicator = JADECommunicator.getInstance();
-            //jxtaCommunicator.setJadeCommunicator(jadeCommunicator);
             // Iniciar JXTA
             jxtaCommunicator.iniciarJXTA(jxtaPort);
             // Iniciar JADE
