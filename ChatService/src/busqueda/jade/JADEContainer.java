@@ -23,6 +23,8 @@ import jade.wrapper.StaleProxyException;
  * @author almunoz
  */
 public class JADEContainer {
+    // La instacia de la clase
+    private static JADEContainer instancia;
     // JADE Communicator
     private JADECommunicator jadeCommunicator;
     // Para iniciar la plataforma
@@ -35,8 +37,15 @@ public class JADEContainer {
     private AgentController agenteChat;
     private AgentController agenteJXTA;
 
-    public JADEContainer(JADECommunicator jadeCommunicator) {
-        this.jadeCommunicator = jadeCommunicator;
+    public static JADEContainer getInstance() {
+        if (instancia == null) {
+            instancia = new JADEContainer();
+        }
+        return instancia;
+    }
+
+    private JADEContainer() {
+        this.jadeCommunicator = null;
         this.profile = null;
         this.puerto = "1099";
         this.mainContainer = null;
@@ -46,6 +55,10 @@ public class JADEContainer {
         this.agenteJXTA = null;
     }
 
+    public void setJadeCommunicator(JADECommunicator jadeCommunicator) {
+        this.jadeCommunicator = jadeCommunicator;
+    }
+    
     public void iniciar() throws StaleProxyException {
         iniciar(this.puerto);
     }
@@ -76,20 +89,22 @@ public class JADEContainer {
     }
 
     public void crearAgentes() throws StaleProxyException {
+        // Crea e inicia el agenteGUI
+        agenteGUI = crearAgente("gui", "busqueda.jade.agentes.AgenteGUI", null);
+        // Crea e inicia el agenteJXTA
+        agenteJXTA = crearAgente("jxta", "busqueda.jade.agentes.AgenteJXTA", null);
         // Crea e inicia el agenteChat
         agenteChat = crearAgente("chat", "busqueda.jade.agentes.chat.AgenteChat", null);
-        // Crea e inicia el agenteGUI
-        Object[] argumentos = {this};
-        agenteGUI = crearAgente("gui", "busqueda.jade.agentes.AgenteGUI", argumentos);
-    }
-
-    public void crearAgentesJXTA(JXTACommunicator jxtaCommunicator) throws StaleProxyException {
-        Object[] argumentos = {jxtaCommunicator};
-        // Crea e inicia el agenteJXTA
-        agenteJXTA = crearAgente("jxta", "busqueda.jade.agentes.AgenteJXTA", argumentos);
     }
 
     /* METODOS PARA EL CHAT */
+    public void iniciarChat(String nombre, String descripcion) {
+        jadeCommunicator.iniciarChat(nombre, descripcion);
+    }
+
+    public void enviarMensajeChatJXTA(String remitente, String mensaje) {
+        jadeCommunicator.enviarMensajeChatJXTA(remitente, mensaje);
+    }
 
     public void enviarMensajeChat(String mensaje) throws StaleProxyException {
         agenteGUI.putO2AObject(mensaje, AgentController.ASYNC);

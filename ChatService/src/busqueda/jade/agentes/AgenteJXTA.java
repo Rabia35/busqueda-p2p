@@ -1,7 +1,6 @@
 
 package busqueda.jade.agentes;
 
-import busqueda.JXTACommunicator;
 import busqueda.jade.JADEContainer;
 import busqueda.jade.agentes.chat.AgenteChat;
 import busqueda.jade.comportamientos.RegistrarServicioBehaviour;
@@ -35,8 +34,8 @@ public class AgenteJXTA extends Agent {
     public static String NOMBRE_SERVICIO = "chat-jxta-service";
     public static String TIPO_SERVICIO = "chat-jxta";
     public static String DESCRIPCION_SERVICIO = "chat-jxta-descripcion";
-    // El JXTA Communicator, para comunicarse con el peer
-    private JXTACommunicator jxtaCommunicator;
+    // El container que realiza la conexion con el JADE Communicator
+    private JADEContainer jadeContainer;
     // Agente del Chat
     private AID agenteChat;
     // Codec del Lenguaje de Contenido
@@ -47,13 +46,8 @@ public class AgenteJXTA extends Agent {
 
     @Override
     protected void setup() {
-        // Argumentos
-        Object[] args = getArguments();
-        if (args != null && args.length > 0) {
-            jxtaCommunicator = (JXTACommunicator) args[0];
-        } else {
-            doDelete();
-        }
+        // Contenedor JADE
+        jadeContainer = JADEContainer.getInstance();
         // Content Language
         codec = new SLCodec();
         this.getContentManager().registerLanguage(codec);
@@ -155,11 +149,11 @@ public class AgenteJXTA extends Agent {
                         if (elemento instanceof Publicar) {
                             Publicar publicar = (Publicar) elemento;
                             Servicio servicio = publicar.getServicio();
-                            jxtaCommunicator.iniciarChat(servicio.getTipo(), servicio.getDescripcion());
+                            jadeContainer.iniciarChat(servicio.getTipo(), servicio.getDescripcion());
                         } else if (elemento instanceof Enviar) {
                             Enviar enviar = (Enviar) elemento;
                             Mensaje mensaje = enviar.getMensaje();
-                            jxtaCommunicator.enviarMensajeChat(mensaje.getRemitente(), mensaje.getMensaje());
+                            jadeContainer.enviarMensajeChatJXTA(mensaje.getRemitente(), mensaje.getMensaje());
                         }
                     } catch (CodecException ex) {
                         System.out.println("CodecException: " + ex.getMessage());
