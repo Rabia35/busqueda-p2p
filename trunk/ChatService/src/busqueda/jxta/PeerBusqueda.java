@@ -4,7 +4,6 @@ package busqueda.jxta;
 import busqueda.JXTACommunicator;
 import busqueda.jxta.chat.Chat;
 import jade.wrapper.StaleProxyException;
-import java.io.File;
 import java.io.IOException;
 import net.jxta.exception.PeerGroupException;
 import net.jxta.peergroup.PeerGroup;
