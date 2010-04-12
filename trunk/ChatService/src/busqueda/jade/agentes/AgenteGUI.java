@@ -30,8 +30,8 @@ public class AgenteGUI extends Agent {
     public static String NOMBRE_SERVICIO = "chat-gui-service";
     public static String TIPO_SERVICIO = "chat-gui";
     public static String DESCRIPCION_SERVICIO = "chat-gui-descripcion";
-    // El manager que realiza la conexion con el JADE Communicator
-    private JADEContainer jadeManager;
+    // El container que realiza la conexion con el JADE Communicator
+    private JADEContainer jadeContainer;
     // Agente del Chat
     private AID agenteChat;
     // Codec del Lenguaje de Contenido
@@ -41,13 +41,8 @@ public class AgenteGUI extends Agent {
 
     @Override
     protected void setup() {
-        // Argumentos
-        Object[] args = getArguments();
-        if (args != null && args.length > 0) {
-            jadeManager = (JADEContainer) args[0];
-        } else {
-            doDelete();
-        }
+        // Contenedor JADE
+        jadeContainer = JADEContainer.getInstance();
         // Content Language
         codec = new SLCodec();
         this.getContentManager().registerLanguage(codec);
@@ -153,7 +148,7 @@ public class AgenteGUI extends Agent {
                         if (elemento instanceof Mostrar) {
                             Mostrar mostrar = (Mostrar) elemento;
                             Mensaje mensaje = mostrar.getMensaje();
-                            jadeManager.mostrarMensajeChat(mensaje.getRemitente(), mensaje.getMensaje());
+                            jadeContainer.mostrarMensajeChat(mensaje.getRemitente(), mensaje.getMensaje());
                         }
                     } catch (CodecException ex) {
                         System.out.println("CodecException: " + ex.getMessage());

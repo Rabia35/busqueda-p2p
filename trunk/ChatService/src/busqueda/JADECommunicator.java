@@ -27,7 +27,8 @@ public class JADECommunicator {
 
     private JADECommunicator() {
         this.jxtaCommunicator = null;
-        this.jadeContainer = new JADEContainer(this);
+        this.jadeContainer = JADEContainer.getInstance();
+        this.jadeContainer.setJadeCommunicator(this);
         this.guiCommunicator = null;
     }
 
@@ -52,7 +53,6 @@ public class JADECommunicator {
             jadeContainer.iniciar();
         }
         jadeContainer.crearAgentes();
-        jadeContainer.crearAgentesJXTA(jxtaCommunicator);
     }
 
     public void terminarJADE() throws StaleProxyException {
@@ -60,6 +60,14 @@ public class JADECommunicator {
     }
 
     /* METODOS PARA EL CHAT */
+
+    public void iniciarChat(String nombre, String descripcion) {
+        jxtaCommunicator.iniciarChat(nombre, descripcion);
+    }
+
+    public void enviarMensajeChatJXTA(String remitente, String mensaje) {
+        jxtaCommunicator.enviarMensajeChat(remitente, mensaje);
+    }
 
     public void enviarMensajeChat(String mensaje) throws StaleProxyException {
         jadeContainer.enviarMensajeChat(mensaje);
