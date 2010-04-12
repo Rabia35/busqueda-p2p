@@ -2,7 +2,6 @@
 package busqueda.jade;
 
 import busqueda.JADECommunicator;
-import busqueda.JXTACommunicator;
 import busqueda.jade.ontologias.mensaje.Mensaje;
 import jade.core.AID;
 import jade.core.Agent;
