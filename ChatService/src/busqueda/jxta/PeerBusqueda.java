@@ -2,7 +2,8 @@
 package busqueda.jxta;
 
 import busqueda.JXTACommunicator;
-import busqueda.jxta.chat.Chat;
+//import busqueda.jxta.chat.Chat;
+import busqueda.jxta.chatnuevo.ChatNuevo;
 import jade.wrapper.StaleProxyException;
 import java.io.IOException;
 import net.jxta.exception.PeerGroupException;
@@ -16,7 +17,11 @@ import net.jxta.platform.NetworkManager;
  */
 public class PeerBusqueda {
     // Datos del Servicio
-    public static String BUSQUEDA = "Name";
+    public static final String ATRIBUTO_BUSQUEDA = "Name";
+    // Timeut de los OutputPipes
+    public static final long TIMEOUT = 5 * 1000; // 5 segundos
+    // Tiempo de Busqueda
+    public static final int TIEMPO_BUSQUEDA = 10 * 1000; // 10 segundos
     // JXTA Communicator
     private JXTACommunicator jxtaCommunicator;
     // Red
@@ -26,8 +31,9 @@ public class PeerBusqueda {
     // Grupo
     private PeerGroup netPeerGroup;
     // Chat
-    private Chat chat;
-
+    private ChatNuevo chat;
+    // Servidor de chat
+    private boolean server;
 
     public PeerBusqueda(JXTACommunicator jxtaCommunicator) {
         this.jxtaCommunicator = jxtaCommunicator;
@@ -35,7 +41,8 @@ public class PeerBusqueda {
         this.configurator = null;
         this.puerto = "9701";
         this.netPeerGroup = null;
-        this.chat = new Chat(this);
+        this.chat = null;
+        this.server = false;
     }
 
     /**
@@ -45,9 +52,11 @@ public class PeerBusqueda {
         return netPeerGroup;
     }
 
-    private void configurarJXTA(String puerto) throws IOException {
+    private void configurarJXTA(String puerto, boolean server) throws IOException {
         // Puerto
         this.puerto = puerto;
+        // Servidor
+        this.server = server;
         // Configurar el Nodo dentro de la Red JXTA
         manager = new NetworkManager(NetworkManager.ConfigMode.EDGE, "peer-busqueda");
         configurator = manager.getConfigurator();
@@ -62,14 +71,14 @@ public class PeerBusqueda {
         configurator.setHttpOutgoing(true);
     }
 
-    public void iniciarJXTA() {
-        iniciarJXTA(puerto);
+    public void iniciarJXTA(boolean server) {
+        iniciarJXTA(puerto, server);
     }
 
-    public void iniciarJXTA(String puerto) {
+    public void iniciarJXTA(String puerto, boolean server) {
         try {
             // Configurar JXTA
-            configurarJXTA(puerto);
+            configurarJXTA(puerto, server);
             // Iniciar la Red
             manager.startNetwork();
             // Grupo
@@ -87,23 +96,20 @@ public class PeerBusqueda {
         detenerChat();
         manager.stopNetwork();
     }
+    
+    /* Para el chat*/
 
     public void iniciarChat(String nombre, String descripcion) {
         try {
-            chat.iniciarServidor(nombre, descripcion);
-            chat.iniciarCliente(PeerBusqueda.BUSQUEDA, nombre);
+            chat = new ChatNuevo(this);
+            chat.iniciar(nombre, descripcion, this.server);
         } catch (IOException ex) {
             System.out.println("IOException: " + ex.getMessage());
         }
     }
 
     public void detenerChat() {
-        try {
-            chat.terminarServidor();
-            chat.terminarCliente();
-        } catch (IOException ex) {
-            System.out.println("IOException: " + ex.getMessage());
-        }
+        chat.terminar(this.server);
     }
 
     public void mostrarMensajeChat(String remitente, String mensaje) {
@@ -123,10 +129,7 @@ public class PeerBusqueda {
     }
 
     public String getAdvertisementsChat() {
-        StringBuffer buffer = new StringBuffer();
-        buffer.append(chat.getAdvertisements());
-        buffer.append("\n");
-        return buffer.toString();
+        return chat.getAdvertisements();
     }
 
 }

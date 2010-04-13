@@ -19,7 +19,7 @@ public abstract class Utilidades {
      * directorio elimina todo el contenido recursivamente
      * @param archivo El archivo a eliminar
      */
-    public static void eliminarCache(String archivo) {
+    private static void eliminarCache(String archivo) {
         try{
             File file = new File(archivo);
             if (file.exists()) {
@@ -35,6 +35,15 @@ public abstract class Utilidades {
         } catch (NullPointerException ex) {
             System.out.println("NullPointerException: " + ex.getMessage());
         }
+    }
+
+    /**
+     * Elimina la cache de JADE y JXTA recursivamente
+     */
+    public static void eliminarCache() {
+        Utilidades.eliminarCache(Utilidades.JADE_MTP);
+        Utilidades.eliminarCache(Utilidades.JADE_AP);
+        Utilidades.eliminarCache(Utilidades.JXTA_CACHE);
     }
 
 }

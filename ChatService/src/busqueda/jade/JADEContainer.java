@@ -3,6 +3,7 @@ package busqueda.jade;
 
 import busqueda.JADECommunicator;
 import busqueda.jade.ontologias.mensaje.Mensaje;
+import busqueda.utilidades.Utilidades;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.Profile;
@@ -65,7 +66,7 @@ public class JADEContainer {
     public void iniciar(String port) throws StaleProxyException {
         this.puerto = port;
         Runtime runtime = Runtime.instance();
-        profile = new ProfileImpl();        
+        profile = new ProfileImpl();
         profile.setParameter(Profile.MAIN_PORT, this.puerto);
         profile.setParameter(Profile.LOCAL_PORT, this.puerto);
         mainContainer = runtime.createMainContainer(profile);

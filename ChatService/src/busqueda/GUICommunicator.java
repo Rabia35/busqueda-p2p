@@ -22,7 +22,7 @@ public class GUICommunicator {
     // Puertos
     private String jxtaPort;
     private String jadePort;
-    // Cliente de chat
+    // Servidor de chat
     private boolean server;
 
     public static GUICommunicator getInstance() {
@@ -42,7 +42,7 @@ public class GUICommunicator {
         this.jadeCommunicator.setJxtaCommunicator(jxtaCommunicator);
         this.jxtaPort = null;
         this.jadePort = null;
-        this.server = true;
+        this.server = false;
     }
 
     /**
@@ -60,8 +60,9 @@ public class GUICommunicator {
             if (args[index].equals("-jxtaport")) {
                 this.jxtaPort = args[index + 1];
             }
-            if (args[index].equals("-cliente")) {
-                this.server = false;
+            if (args[index].equals("-server")) {
+                this.server = true;
+                gui.deshabilitar();
             }
         }
     }
@@ -70,7 +71,7 @@ public class GUICommunicator {
         try {
             extraerArgumentos(args);
             // Iniciar JXTA
-            jxtaCommunicator.iniciarJXTA(jxtaPort);
+            jxtaCommunicator.iniciarJXTA(jxtaPort, server);
             // Iniciar JADE
             jadeCommunicator.iniciarJADE(jadePort);
         } catch (StaleProxyException ex) {
@@ -83,9 +84,7 @@ public class GUICommunicator {
     public void salir() throws StaleProxyException, IOException {
         jadeCommunicator.terminarJADE();
         jxtaCommunicator.terminarJXTA();
-        Utilidades.eliminarCache(Utilidades.JADE_MTP);
-        Utilidades.eliminarCache(Utilidades.JADE_AP);
-        Utilidades.eliminarCache(Utilidades.JXTA_CACHE);
+        Utilidades.eliminarCache();
     }
 
     public String getAdvertisementsChat() {
