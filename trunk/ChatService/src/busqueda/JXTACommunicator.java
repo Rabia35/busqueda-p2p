@@ -46,11 +46,11 @@ public class JXTACommunicator {
         this.guiCommunicator = guiCommunicator;
     }
 
-    public void iniciarJXTA(String puerto) {
+    public void iniciarJXTA(String puerto, boolean server) {
         if (puerto != null ){
-            peer.iniciarJXTA(puerto);
+            peer.iniciarJXTA(puerto, server);
         } else {
-            peer.iniciarJXTA();
+            peer.iniciarJXTA(server);
         }
     }
 

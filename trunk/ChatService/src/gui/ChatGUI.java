@@ -165,6 +165,11 @@ public class ChatGUI extends javax.swing.JFrame {
         jTextAreaMensajes.setText("");
     }//GEN-LAST:event_jButtonLimpiarActionPerformed
 
+    public void deshabilitar() {
+        jTextFieldMensaje.setEnabled(false);
+        jButtonEnviar.setEnabled(false);
+    }
+
     public void mostrarAdvertisements() {
         jTextAreaMensajes.setText("");
         jTextAreaMensajes.setText(guiCommunicator.getAdvertisementsChat());
