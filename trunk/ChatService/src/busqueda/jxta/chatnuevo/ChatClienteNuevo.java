@@ -1,7 +1,7 @@
 
 package busqueda.jxta.chatnuevo;
 
-import busqueda.jxta.PeerBusqueda;
+import busqueda.jxta.UtilidadesJXTA;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -40,16 +40,12 @@ public class ChatClienteNuevo {
     public ChatClienteNuevo(ChatNuevo chat) {
         this.chat = chat;
         this.servidor = null;
-        this.inputPipeAdvertisement = chat.crearPipeAdvertisement(ChatNuevo.NOMBRE_CLIENTE, ChatNuevo.DESCRIPCION_CLIENTE);
+        this.inputPipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(chat.getGrupoChat(), ChatNuevo.NOMBRE_CLIENTE, ChatNuevo.DESCRIPCION_CLIENTE);
         PipeInputListener listener = new PipeInputListener();
-        try {
-            this.inputPipe = chat.crearInputPipe(inputPipeAdvertisement, listener);
-            //chat.publicarAdvertisement(inputPipeAdvertisement);
-        } catch (IOException ex) {
-            System.out.println("IOException: No se pudo crear el InputPipe del Cliente");
-        }
+        this.inputPipe = UtilidadesJXTA.crearInputPipe(chat.getGrupoChat(), inputPipeAdvertisement, listener);
+        UtilidadesJXTA.publicarAdvertisement(chat.getGrupoChat(), inputPipeAdvertisement);
         TimerBusquedaListener timerListener = new TimerBusquedaListener();
-        this.timerBusqueda = new Timer(PeerBusqueda.TIEMPO_BUSQUEDA, timerListener);
+        this.timerBusqueda = new Timer(UtilidadesJXTA.DELAY_BUSQUEDA, timerListener);
         iniciarBusquedaServidor();
     }
 
@@ -79,7 +75,7 @@ public class ChatClienteNuevo {
             inputPipe.close();
         }
         if (inputPipeAdvertisement != null) {
-            chat.eliminarAdvertisement(inputPipeAdvertisement);
+            UtilidadesJXTA.eliminarAdvertisement(chat.getGrupoChat(), inputPipeAdvertisement);
         }
         cerrarPipeServidor();
     }
@@ -92,14 +88,14 @@ public class ChatClienteNuevo {
         Advertisement adv = null;
         Enumeration<Advertisement> en = null;
         try {
-            en = chat.getNetPeerGroup().getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, PeerBusqueda.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR);
+            en = chat.getGrupoChat().getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR);
         } catch (IOException ex) {
             System.out.println("IOException: No se encontraron advertisements locales");
         }
         if (en != null) {
             while (en.hasMoreElements()) {
                 adv = en.nextElement();
-                chat.eliminarAdvertisement(adv);
+                UtilidadesJXTA.eliminarAdvertisement(chat.getGrupoChat(), adv);
             }
         }
     }
@@ -114,22 +110,17 @@ public class ChatClienteNuevo {
         BusquedaListener busquedaListener = new BusquedaListener();
         String peerId = null; // Busca todos los peers
         int numeroAdvertisements = 1; // un advertisement por Peer
-        chat.getNetPeerGroup().getDiscoveryService().getRemoteAdvertisements(peerId, DiscoveryService.ADV, PeerBusqueda.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR, numeroAdvertisements, busquedaListener);
+        chat.getGrupoChat().getDiscoveryService().getRemoteAdvertisements(peerId, DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR, numeroAdvertisements, busquedaListener);
         Enumeration<Advertisement> en = null;
         try {
-            en = chat.getNetPeerGroup().getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, PeerBusqueda.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR);
+            en = chat.getGrupoChat().getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR);
         } catch (IOException ex) {
             System.out.println("IOException: No se encontraron advertisements locales");
         }
         if (en != null) {
             while (en.hasMoreElements()) {
                 adv = (PipeAdvertisement) en.nextElement();
-                try {
-                    servidor = chat.crearOuputPipe(adv);
-                } catch (IOException ex) {
-                    System.out.println("IOException: No se pudo crear el OutputPipe del servidor en el cliente");
-                    chat.eliminarAdvertisement(adv);
-                }
+                servidor = UtilidadesJXTA.crearOuputPipe(chat.getGrupoChat(), adv);
                 if (servidor != null) {
                     terminarBusquedaServidor();
                     break;
@@ -174,13 +165,9 @@ public class ChatClienteNuevo {
             if (remitente != null && mensaje != null) {
                 chat.mostrarMensajeChat(remitente.toString(), mensaje.toString());
             } else if (cerrar != null) {
-                try {
-                    PipeAdvertisement advertisement = chat.crearPipeAdvertisementFromString(cerrar.toString());
-                    chat.eliminarAdvertisement(advertisement);
-                    iniciarBusquedaServidor();
-                } catch (IOException ex) {
-                    System.out.println("IOException: No se pudo crear el advertisement del mensaje");
-                }
+                PipeAdvertisement advertisement = UtilidadesJXTA.crearPipeAdvertisementFromString(cerrar.toString());
+                UtilidadesJXTA.eliminarAdvertisement(chat.getGrupoChat(), advertisement);
+                iniciarBusquedaServidor();
             } else {
                 chat.mostrarMensajeChat("Error", "No se pudo mostrar el mensaje");
             }

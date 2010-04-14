@@ -1,6 +1,7 @@
 
 package busqueda.jxta.chatnuevo;
 
+import busqueda.jxta.UtilidadesJXTA;
 import java.io.IOException;
 import java.util.Vector;
 import net.jxta.endpoint.Message;
@@ -28,14 +29,10 @@ public class ChatServidorNuevo {
     
     public ChatServidorNuevo(ChatNuevo chat) {
         this.chat = chat;
-        this.inputPipeAdvertisement = chat.crearPipeAdvertisement(ChatNuevo.NOMBRE_SERVIDOR, ChatNuevo.DESCRIPCION_SERVIDOR);
+        this.inputPipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(chat.getGrupoChat(), ChatNuevo.NOMBRE_SERVIDOR, ChatNuevo.DESCRIPCION_SERVIDOR);
         PipeInputListener listener = new PipeInputListener();
-        try {
-            this.inputPipe = chat.crearInputPipe(inputPipeAdvertisement, listener);
-            chat.publicarAdvertisement(inputPipeAdvertisement);
-        } catch (IOException ex) {
-            System.out.println("IOException: " + ex.getMessage());
-        }
+        this.inputPipe = UtilidadesJXTA.crearInputPipe(chat.getGrupoChat(), inputPipeAdvertisement, listener);
+        UtilidadesJXTA.publicarAdvertisement(chat.getGrupoChat(), inputPipeAdvertisement);
         this.clientes = new Vector<OutputPipe>(0, 10);
     }
 
@@ -51,7 +48,7 @@ public class ChatServidorNuevo {
             inputPipe.close();
         }
         if (inputPipeAdvertisement != null) {
-            chat.eliminarAdvertisement(inputPipeAdvertisement);
+            UtilidadesJXTA.eliminarAdvertisement(chat.getGrupoChat(), inputPipeAdvertisement);
         }
         for (OutputPipe outputPipe : clientes) {
             if (outputPipe != null) {
@@ -97,11 +94,7 @@ public class ChatServidorNuevo {
             MessageElement mensaje  = message.getMessageElement("mensaje");
             MessageElement cliente  = message.getMessageElement("cliente");
             if (remitente != null && mensaje != null && cliente != null) {
-                try {
-                    advertisement = chat.crearPipeAdvertisementFromString(cliente.toString());
-                } catch (IOException ex) {
-                    System.out.println("IOException: No se pudo crear el advertisement del mensaje");
-                }
+                advertisement = UtilidadesJXTA.crearPipeAdvertisementFromString(cliente.toString());
                 chat.mostrarMensajeChat(remitente.toString(), mensaje.toString());
             } else {
                 chat.mostrarMensajeChat("Error", "No se pudo mostrar el mensaje");
@@ -127,12 +120,8 @@ public class ChatServidorNuevo {
                 }
             }
             if (!encontrado) {
-                try {
-                    OutputPipe clienteOutputPipe = chat.crearOuputPipe(advertisement);
-                    clientes.addElement(clienteOutputPipe);
-                } catch (IOException ex) {
-                    System.out.println("IOException: No se pudo crear el OutputPipe del cliente en el servidor");
-                }
+                OutputPipe clienteOutputPipe = UtilidadesJXTA.crearOuputPipe(chat.getGrupoChat(), advertisement);
+                clientes.addElement(clienteOutputPipe);
             }
         }
     }

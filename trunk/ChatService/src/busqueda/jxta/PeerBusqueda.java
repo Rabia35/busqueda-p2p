@@ -2,7 +2,6 @@
 package busqueda.jxta;
 
 import busqueda.JXTACommunicator;
-//import busqueda.jxta.chat.Chat;
 import busqueda.jxta.chatnuevo.ChatNuevo;
 import jade.wrapper.StaleProxyException;
 import java.io.IOException;
@@ -16,12 +15,6 @@ import net.jxta.platform.NetworkManager;
  * @author almunoz
  */
 public class PeerBusqueda {
-    // Datos del Servicio
-    public static final String ATRIBUTO_BUSQUEDA = "Name";
-    // Timeut de los OutputPipes
-    public static final long TIMEOUT = 5 * 1000; // 5 segundos
-    // Tiempo de Busqueda
-    public static final int TIEMPO_BUSQUEDA = 10 * 1000; // 10 segundos
     // JXTA Communicator
     private JXTACommunicator jxtaCommunicator;
     // Red
