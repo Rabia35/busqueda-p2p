@@ -15,19 +15,19 @@ import net.jxta.platform.NetworkManager;
  * @author almunoz
  */
 public class PeerBusqueda {
-    // JXTA Communicator
+    public static final String NOMBRE = "Network JXTA-JADE";
+    public static final String NOMBRE_PEER = "Peer JXTA-JADE";
+    public static boolean SERVIDOR_CHAT = false;
+
     private JXTACommunicator jxtaCommunicator;
     // Red
     private NetworkManager manager;
     private NetworkConfigurator configurator;
-    private String puerto;
-    // Grupo
     private PeerGroup netPeerGroup;
+    private String puerto;
     // Chat
     private ChatNuevo chat;
-    // Servidor de chat
-    private boolean server;
-
+    
     public PeerBusqueda(JXTACommunicator jxtaCommunicator) {
         this.jxtaCommunicator = jxtaCommunicator;
         this.manager = null;
@@ -35,7 +35,6 @@ public class PeerBusqueda {
         this.puerto = "9701";
         this.netPeerGroup = null;
         this.chat = null;
-        this.server = false;
     }
 
     /**
@@ -45,48 +44,62 @@ public class PeerBusqueda {
         return netPeerGroup;
     }
 
-    private void configurarJXTA(String puerto, boolean server) throws IOException {
-        // Puerto
+    public void iniciarJXTA(boolean server) {
+        iniciarJXTA(puerto, server);
+    }
+
+    public void iniciarJXTA(String puerto, boolean servidor) {
+        try {
+            PeerBusqueda.SERVIDOR_CHAT = servidor;
+            configurarJXTA(puerto);
+            // Iniciar la Red y Obtener el grupo
+            netPeerGroup = manager.startNetwork();
+            //netPeerGroup = PeerGroupFactory.newNetPeerGroup();
+            //esperarConexionRendezvous();
+        } catch (PeerGroupException ex) {
+            System.out.println("PeerGroupException: " + ex.getMessage());
+        } catch (IOException ex) {
+            System.out.println("IOException: " + ex.getMessage());
+        }
+    }
+
+    private void configurarJXTA(String puerto) throws IOException {
         this.puerto = puerto;
-        // Servidor
-        this.server = server;
         // Configurar el Nodo dentro de la Red JXTA
-        manager = new NetworkManager(NetworkManager.ConfigMode.EDGE, "peer-busqueda");
+        manager = new NetworkManager(NetworkManager.ConfigMode.EDGE, NOMBRE);
+        // Crear un nuevo Peer
+        // El nombre debe pasarse com parametro y ser diferente para cado nodo
+        //PeerID peerID = UtilidadesJXTA.crearPeerID(NOMBRE_PEER);
+        //manager.setPeerID(peerID);
+        // Configuracion de la RED
         configurator = manager.getConfigurator();
+        configurator.setName(NOMBRE_PEER);
         // Configuracion TCP
-        configurator.setTcpEnabled(true);
         configurator.setTcpPort(Integer.valueOf(this.puerto));
+        configurator.setTcpEnabled(true);
         configurator.setTcpOutgoing(true);
         configurator.setTcpIncoming(true);
         configurator.setUseMulticast(true);
         // Configuracion HTTP
         configurator.setHttpEnabled(true);
         configurator.setHttpOutgoing(true);
+        //configurator.setHttpIncoming(true);
+        // Guardar la Configuracion
+        //configurator.save();
     }
 
-    public void iniciarJXTA(boolean server) {
-        iniciarJXTA(puerto, server);
-    }
-
-    public void iniciarJXTA(String puerto, boolean server) {
-        try {
-            // Configurar JXTA
-            configurarJXTA(puerto, server);
-            // Iniciar la Red
-            manager.startNetwork();
-            // Grupo
-            netPeerGroup = manager.getNetPeerGroup();
-            //netPeerGroup = PeerGroupFactory.newNetPeerGroup();
-        } catch (PeerGroupException ex) {
-            System.out.println("PeerGroupException: " + ex.getMessage());
-
-        } catch (IOException ex) {
-            System.out.println("IOException: " + ex.getMessage());
+    private void esperarConexionRendezvous() {
+        // Espera una conexion a un Rendezvous
+        System.out.println("Esperando una conexion a un Rendezvous...");
+        if (manager.waitForRendezvousConnection(1 * 1000)) {
+            System.out.println("Conexion a Rendezvous establecida.");
+        } else {
+            System.out.println("Conexion a Rendezvous no establecida.");
         }
     }
 
     public void terminarJXTA() {
-        detenerChat();
+        chat.terminar();
         manager.stopNetwork();
     }
     
@@ -95,14 +108,10 @@ public class PeerBusqueda {
     public void iniciarChat(String nombre, String descripcion) {
         try {
             chat = new ChatNuevo(this);
-            chat.iniciar(nombre, descripcion, this.server);
+            chat.iniciar(nombre, descripcion);
         } catch (IOException ex) {
             System.out.println("IOException: " + ex.getMessage());
         }
-    }
-
-    public void detenerChat() {
-        chat.terminar(this.server);
     }
 
     public void mostrarMensajeChat(String remitente, String mensaje) {

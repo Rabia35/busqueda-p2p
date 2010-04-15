@@ -69,6 +69,7 @@ public class GUICommunicator {
 
     public void iniciar(String args[]) {
         try {
+            Utilidades.eliminarCache();
             extraerArgumentos(args);
             // Iniciar JXTA
             jxtaCommunicator.iniciarJXTA(jxtaPort, server);
@@ -82,8 +83,8 @@ public class GUICommunicator {
     }
 
     public void salir() throws StaleProxyException, IOException {
-        jadeCommunicator.terminarJADE();
         jxtaCommunicator.terminarJXTA();
+        jadeCommunicator.terminarJADE();
         Utilidades.eliminarCache();
     }
 

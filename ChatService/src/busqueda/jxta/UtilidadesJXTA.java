@@ -9,12 +9,17 @@ import net.jxta.document.MimeMediaType;
 import net.jxta.document.StructuredDocumentFactory;
 import net.jxta.document.XMLDocument;
 import net.jxta.id.IDFactory;
+import net.jxta.peer.PeerID;
 import net.jxta.peergroup.PeerGroup;
+import net.jxta.peergroup.PeerGroupID;
 import net.jxta.pipe.InputPipe;
 import net.jxta.pipe.OutputPipe;
 import net.jxta.pipe.PipeID;
 import net.jxta.pipe.PipeMsgListener;
 import net.jxta.pipe.PipeService;
+import net.jxta.platform.Module;
+import net.jxta.platform.NetworkManager;
+import net.jxta.protocol.ModuleImplAdvertisement;
 import net.jxta.protocol.PipeAdvertisement;
 
 /**
@@ -25,6 +30,37 @@ public abstract class UtilidadesJXTA {
     public static final String ATRIBUTO_BUSQUEDA = "Name";
     public static final long PIPE_TIMEOUT = 5 * 1000; // 5 segundos
     public static final int DELAY_BUSQUEDA = 10 * 1000; // 10 segundos
+
+    public static void crearPeer(NetworkManager manager, String nombre) {
+        PeerID peerID = IDFactory.newPeerID(PeerGroupID.defaultNetPeerGroupID, nombre.getBytes());
+        manager.setPeerID(peerID);
+    }
+
+    public static PeerGroup crearGrupo(PeerGroup netPeerGroup, String nombre, String descripcion) {
+        try {
+            PeerGroupID peerGroupID = IDFactory.newPeerGroupID(nombre.getBytes());
+            ModuleImplAdvertisement moduleImpAdv = netPeerGroup.getAllPurposePeerGroupImplAdvertisement();
+            // The creation includes local publishing
+            System.out.println("Creando el nuevo PeerGroup: '" + nombre + "'");
+            PeerGroup grupo = netPeerGroup.newGroup(peerGroupID, moduleImpAdv, nombre, descripcion);
+            return grupo;
+        } catch (Exception ex) {
+            System.out.println("Exception: No se pudo crear el PeerGroup.");
+            return null;
+        }
+    }
+
+    public static void iniciarGrupo(PeerGroup grupo) {
+        if (Module.START_OK == grupo.startApp(new String[0])) {
+            System.out.println("El PeerGroup '" + grupo.getPeerGroupName() + "' se inicio correctamente.");
+        } else {
+            System.out.println("El PeerGroup '" + grupo.getPeerGroupName() + "' no se pudo iniciar.");
+        }
+    }
+
+    public static void terminarGrupo(PeerGroup grupo) {
+        System.out.println("El PeerGroup '" + grupo.getPeerGroupName() + "' se termino correctamente.");
+    }
 
     public static PipeAdvertisement crearPipeAdvertisementFromString(String advString) {
         try {
@@ -46,16 +82,6 @@ public abstract class UtilidadesJXTA {
         advertisement.setName(nombre);
         advertisement.setDescription(descripcion);
         return advertisement;
-    }
-
-    public static InputPipe crearInputPipe(PeerGroup grupo, PipeAdvertisement advertisement) {
-        try {
-            InputPipe pipe = grupo.getPipeService().createInputPipe(advertisement);
-            return pipe;
-        } catch (IOException ex) {
-            System.out.println("IOException: No se pudo crear el InputPipe.");
-            return null;
-        }
     }
 
     public static InputPipe crearInputPipe(PeerGroup grupo, PipeAdvertisement advertisement, PipeMsgListener listener) {
@@ -93,6 +119,10 @@ public abstract class UtilidadesJXTA {
         } catch (IOException ex) {
             System.out.println("IOException: No se pudo publicar el advertisement.");
         }
+    }
+
+    public static void publicarAdvertisementRemoto(PeerGroup grupo, String peerID, Advertisement advertisement) {
+        grupo.getDiscoveryService().remotePublish(peerID, advertisement);
     }
 
     public static void eliminarAdvertisement(PeerGroup grupo, Advertisement advertisement) {

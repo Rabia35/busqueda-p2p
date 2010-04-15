@@ -2,17 +2,13 @@
 package busqueda.jxta.chat;
 
 import busqueda.jxta.PeerBusqueda;
-import java.io.IOException;
-import net.jxta.document.AdvertisementFactory;
+import busqueda.jxta.UtilidadesJXTA;
 import net.jxta.endpoint.Message;
 import net.jxta.endpoint.Message.ElementIterator;
 import net.jxta.endpoint.MessageElement;
-import net.jxta.id.IDFactory;
 import net.jxta.pipe.InputPipe;
-import net.jxta.pipe.PipeID;
 import net.jxta.pipe.PipeMsgEvent;
 import net.jxta.pipe.PipeMsgListener;
-import net.jxta.pipe.PipeService;
 import net.jxta.protocol.PipeAdvertisement;
 
 /**
@@ -40,44 +36,16 @@ public class ChatServidor {
         return pipeAdvertisement;
     }
 
-    private PipeAdvertisement crearPipeAdvertisement(String nombre, String descripcion) {
-        PipeID pipeID = (PipeID) IDFactory.newPipeID(peer.getNetPeerGroup().getPeerGroupID());
-        PipeAdvertisement advertisement = (PipeAdvertisement) AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
-        advertisement.setPipeID(pipeID);
-        advertisement.setType(PipeService.UnicastType);
-        advertisement.setName(nombre);
-        advertisement.setDescription(descripcion);
-        return advertisement;
-    }
-
-    private InputPipe crearInputPipe(PipeAdvertisement advertisement) throws IOException {
-        PipeInputListener pipeInputListener = new PipeInputListener();
-        InputPipe pipe = peer.getNetPeerGroup().getPipeService().createInputPipe(advertisement, pipeInputListener);
-        return pipe;
-    }
-
-    private void publicarAdvertisement(PipeAdvertisement advertisement) throws IOException {
-        peer.getNetPeerGroup().getDiscoveryService().publish(advertisement);
-        peer.getNetPeerGroup().getDiscoveryService().remotePublish(advertisement);
-    }
-
     public void iniciar(String nombre, String descripcion) {
-        try {
-            pipeAdvertisement = crearPipeAdvertisement(nombre, descripcion);
-            inputPipe = crearInputPipe(pipeAdvertisement);
-            publicarAdvertisement(pipeAdvertisement);
-        } catch (IOException ex) {
-            System.out.println("IOException: " + ex.getMessage());
-        }
+        pipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(peer.getNetPeerGroup(), nombre, descripcion);
+        PipeInputListener listener = new PipeInputListener();
+        inputPipe = UtilidadesJXTA.crearInputPipe(peer.getNetPeerGroup(), pipeAdvertisement, listener);
+        UtilidadesJXTA.publicarAdvertisement(peer.getNetPeerGroup(), pipeAdvertisement);
     }
 
     public void detener() {
-        try {
-            inputPipe.close();
-            peer.getNetPeerGroup().getDiscoveryService().flushAdvertisement(pipeAdvertisement);
-        } catch (IOException ex) {
-            System.out.println("IOException: " + ex.getMessage());
-        }
+        inputPipe.close();
+        UtilidadesJXTA.eliminarAdvertisement(peer.getNetPeerGroup(), pipeAdvertisement);
     }
 
     // Clase para escuchar los mensajes de entrada
