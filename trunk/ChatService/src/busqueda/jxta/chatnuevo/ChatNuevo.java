@@ -46,7 +46,7 @@ public class ChatNuevo {
         if (grupoChat != null) {
             UtilidadesJXTA.iniciarGrupo(grupoChat);
         }
-        if (PeerBusqueda.SERVIDOR_CHAT == true) {
+        if (PeerBusqueda.SERVIDOR_CHAT) {
             System.out.println("Iniciando el Servidor");
             this.servidor = new ChatServidorNuevo(this);
         } else {
@@ -58,7 +58,7 @@ public class ChatNuevo {
     public void terminar() {
         System.out.println("Deteniendo el Chat");
         UtilidadesJXTA.terminarGrupo(grupoChat);
-        if (PeerBusqueda.SERVIDOR_CHAT == true) {
+        if (PeerBusqueda.SERVIDOR_CHAT) {
             System.out.println("Deteniendo el Servidor");
             this.servidor.detener();
         } else {

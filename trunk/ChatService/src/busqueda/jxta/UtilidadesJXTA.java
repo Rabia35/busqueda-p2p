@@ -3,6 +3,8 @@ package busqueda.jxta;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.jxta.document.Advertisement;
 import net.jxta.document.AdvertisementFactory;
 import net.jxta.document.MimeMediaType;
@@ -59,6 +61,7 @@ public abstract class UtilidadesJXTA {
     }
 
     public static void terminarGrupo(PeerGroup grupo) {
+        //grupo.stopApp();
         System.out.println("El PeerGroup '" + grupo.getPeerGroupName() + "' se termino correctamente.");
     }
 
