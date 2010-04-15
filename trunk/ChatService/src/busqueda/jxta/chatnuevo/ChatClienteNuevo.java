@@ -34,7 +34,6 @@ public class ChatClienteNuevo {
     private PipeAdvertisement inputPipeAdvertisement;
     private InputPipe inputPipe;
     // Timer, para buscar advertisements remotos cada cierto tiempo
-    
     private Timer timerBusqueda;
 
     public ChatClienteNuevo(ChatNuevo chat) {
@@ -123,6 +122,8 @@ public class ChatClienteNuevo {
                 servidor = UtilidadesJXTA.crearOuputPipe(chat.getGrupoChat(), adv);
                 if (servidor != null) {
                     terminarBusquedaServidor();
+                    //String servidorPeerID = ?????;
+                    //UtilidadesJXTA.publicarAdvertisementRemoto(chat.getGrupoChat(), servidorPeerID, adv);
                     break;
                 }
             }

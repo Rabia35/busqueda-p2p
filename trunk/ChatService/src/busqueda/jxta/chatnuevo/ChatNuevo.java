@@ -2,6 +2,7 @@
 package busqueda.jxta.chatnuevo;
 
 import busqueda.jxta.PeerBusqueda;
+import busqueda.jxta.UtilidadesJXTA;
 import java.io.IOException;
 import net.jxta.peergroup.PeerGroup;
 
@@ -10,6 +11,8 @@ import net.jxta.peergroup.PeerGroup;
  * @author almunoz
  */
 public class ChatNuevo {
+    public static final String NOMBRE_GRUPO = "Chat PeerGroup";
+    public static final String DESCRIPCION_GRUPO = "Descripcion del Chat PeerGroup";
     public static final String NOMBRE_CLIENTE = "chat-cliente";
     public static final String DESCRIPCION_CLIENTE = "Cliente del Chat";
     public static final String NOMBRE_SERVIDOR = "chat-servidor";
@@ -20,12 +23,14 @@ public class ChatNuevo {
     private ChatServidorNuevo servidor;
     // Cliente
     private ChatClienteNuevo cliente;
-    // Grupo
+    // Grupos
+    private PeerGroup netPeerGroup;
     private PeerGroup grupoChat;
 
     public ChatNuevo(PeerBusqueda peer) {
         this.peer = peer;
-        this.grupoChat = peer.getNetPeerGroup();
+        this.netPeerGroup = peer.getNetPeerGroup();
+        this.grupoChat = null;
         this.servidor = null;
         this.cliente = null;
     }
@@ -34,9 +39,14 @@ public class ChatNuevo {
         return grupoChat;
     }
 
-    public void iniciar(String nombre, String descripcion, boolean server) throws IOException {
+    public void iniciar(String nombre, String descripcion) throws IOException {
         System.out.println("Iniciando el Chat");
-        if (server) {
+        //grupoChat = netPeerGroup;
+        grupoChat = UtilidadesJXTA.crearGrupo(netPeerGroup, NOMBRE_GRUPO, DESCRIPCION_GRUPO);
+        if (grupoChat != null) {
+            UtilidadesJXTA.iniciarGrupo(grupoChat);
+        }
+        if (PeerBusqueda.SERVIDOR_CHAT == true) {
             System.out.println("Iniciando el Servidor");
             this.servidor = new ChatServidorNuevo(this);
         } else {
@@ -45,9 +55,10 @@ public class ChatNuevo {
         }
     }
 
-    public void terminar(boolean server) {
+    public void terminar() {
         System.out.println("Deteniendo el Chat");
-        if (server) {
+        UtilidadesJXTA.terminarGrupo(grupoChat);
+        if (PeerBusqueda.SERVIDOR_CHAT == true) {
             System.out.println("Deteniendo el Servidor");
             this.servidor.detener();
         } else {

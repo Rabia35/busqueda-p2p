@@ -9,10 +9,10 @@ import java.io.File;
  */
 public abstract class Utilidades {
     // Directorio del Cache de JXTA
-    public static final String JXTA_CACHE = ".jxta";
+    private static String JXTA_CACHE = ".jxta";
     // Archivos del Cache de JADE
-    public static final String JADE_MTP = "MTPs-Main-Container.txt";
-    public static final String JADE_AP = "APDescription.txt";
+    private static String JADE_MTP = "MTPs-Main-Container.txt";
+    private static String JADE_AP = "APDescription.txt";
 
     /**
      * Elimina el archivo pasado como parametro, si el parametro es un
@@ -25,12 +25,16 @@ public abstract class Utilidades {
             if (file.exists()) {
                 if (file.isDirectory()) {
                     File[] archivos = file.listFiles();
-                    for (int index=0; index<archivos.length ; index++) {
-                        eliminarCache(archivos[index].getPath());
+                    for (int index=0; index<archivos.length; index++) {
+                        Utilidades.eliminarCache(archivos[index].getPath());
                     }
                 }
-                System.out.println("Eliminando: " + file.getPath());
-                file.delete();
+                boolean eliminado = file.delete();
+                if (eliminado) {
+                    System.out.println("Eliminando: " + file.getPath());
+                } else {
+                    System.out.println("No se elimino: " + file.getPath());
+                }
             }
         } catch (NullPointerException ex) {
             System.out.println("NullPointerException: " + ex.getMessage());
@@ -41,6 +45,7 @@ public abstract class Utilidades {
      * Elimina la cache de JADE y JXTA recursivamente
      */
     public static void eliminarCache() {
+        System.out.println("Eliminando cache de JXTA y JADE");
         Utilidades.eliminarCache(Utilidades.JADE_MTP);
         Utilidades.eliminarCache(Utilidades.JADE_AP);
         Utilidades.eliminarCache(Utilidades.JXTA_CACHE);

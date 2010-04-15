@@ -21,6 +21,7 @@ import jade.content.onto.UngroundedException;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -149,7 +150,7 @@ public class AgenteJXTA extends Agent {
                         if (elemento instanceof Publicar) {
                             Publicar publicar = (Publicar) elemento;
                             Servicio servicio = publicar.getServicio();
-                            jadeContainer.iniciarChat(servicio.getTipo(), servicio.getDescripcion());
+                            myAgent.addBehaviour(new IniciarChatBehaviour(myAgent, servicio.getTipo(), servicio.getDescripcion()));
                         } else if (elemento instanceof Enviar) {
                             Enviar enviar = (Enviar) elemento;
                             Mensaje mensaje = enviar.getMensaje();
@@ -167,6 +168,23 @@ public class AgenteJXTA extends Agent {
                 block();
             }
         }
+    }
+
+    private class IniciarChatBehaviour extends OneShotBehaviour {
+        private String tipo;
+        private String descripcion;
+
+        public IniciarChatBehaviour(Agent agente, String tipo, String descripcion) {
+            super(agente);
+            this.tipo = tipo;
+            this.descripcion = descripcion;
+        }
+
+        @Override
+        public void action() {
+            jadeContainer.iniciarChat(tipo, descripcion);
+        }
+
     }
 
 }

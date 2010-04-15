@@ -2,6 +2,7 @@
 package busqueda.jxta.chat;
 
 import busqueda.jxta.PeerBusqueda;
+import busqueda.jxta.UtilidadesJXTA;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -27,32 +28,21 @@ public class ChatCliente {
     private PeerBusqueda peer;
     // Advertisement del servidor local
     private PipeAdvertisement pipeAdvertisementServidor;
-    // Advertisement
-    private PipeAdvertisement pipeAdvertisement;    
     // Canales de Comunicacion (Pipes)
     private Vector<OutputPipe> outputPipes;
-    private static long TIMEOUT = 5000; // 5 segundos
     // Timer, para buscar advertisements remotos cada cierto tiempo
-    private static int TIEMPO_BUSQUEDA = 30000; // 10 segundos
     private Timer timerBusqueda;
 
     public ChatCliente(PeerBusqueda peer) {
         this.peer = peer;
         this.pipeAdvertisementServidor = null;
-        this.pipeAdvertisement = null;
         this.outputPipes = new Vector<OutputPipe>(0,10);
         this.timerBusqueda = null;
     }
     
-    private OutputPipe crearOuputPipe(PipeAdvertisement advertisement) throws IOException {
-        OutputPipe pipe = null;
-        pipe = peer.getNetPeerGroup().getPipeService().createOutputPipe(advertisement, TIMEOUT);
-        return pipe;
-    }
-
     private void buscarAdvertisement(String busqueda, String nombre) throws IOException {
         buscarAdvertisementChat(busqueda, nombre);
-        this.timerBusqueda = new Timer(TIEMPO_BUSQUEDA, new TimerBusquedaListener(busqueda, nombre));
+        this.timerBusqueda = new Timer(UtilidadesJXTA.DELAY_BUSQUEDA, new TimerBusquedaListener(busqueda, nombre));
         if (!timerBusqueda.isRunning()) {
             timerBusqueda.start();
         }
@@ -73,7 +63,7 @@ public class ChatCliente {
             while (en.hasMoreElements()) {
                 PipeAdvertisement adv = (PipeAdvertisement) en.nextElement();
                 if (pipeAdvertisementServidor.getID() != adv.getID()) {
-                    OutputPipe outputPipe = crearOuputPipe(adv);
+                    OutputPipe outputPipe = UtilidadesJXTA.crearOuputPipe(peer.getNetPeerGroup(), adv);
                     if (outputPipe != null) {
                         outputPipes.addElement(outputPipe);
                     }
@@ -128,7 +118,7 @@ public class ChatCliente {
                 while (responses.hasMoreElements()) {
                     // Muestro el advertisement encontrado
                     Advertisement adv = responses.nextElement();
-                    System.out.println("Se encontro un advertisement remoto de tipo: " + adv.getAdvType());
+                    System.out.println("Se encontro un advertisement remoto: " + adv.getID().toString());
                 }
             }            
         }

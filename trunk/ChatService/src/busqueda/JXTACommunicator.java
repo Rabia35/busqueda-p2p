@@ -64,10 +64,6 @@ public class JXTACommunicator {
         peer.iniciarChat(nombre, descripcion);
     }
 
-    public void detenerChat() {
-        peer.detenerChat();
-    }
-
     public void enviarMensajeChat(final String remitente, final String mensaje) {
         peer.enviarMensajeChat(remitente, mensaje);
     }
