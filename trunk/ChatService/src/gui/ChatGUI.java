@@ -83,6 +83,7 @@ public class ChatGUI extends javax.swing.JFrame {
         });
 
         jTextAreaMensajes.setColumns(20);
+        jTextAreaMensajes.setLineWrap(true);
         jTextAreaMensajes.setRows(5);
         jTextAreaMensajes.setTabSize(4);
         jScrollPaneMensajes.setViewportView(jTextAreaMensajes);

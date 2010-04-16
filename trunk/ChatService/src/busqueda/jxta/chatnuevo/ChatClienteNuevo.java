@@ -39,10 +39,10 @@ public class ChatClienteNuevo {
     public ChatClienteNuevo(ChatNuevo chat) {
         this.chat = chat;
         this.servidor = null;
-        this.inputPipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(chat.getGrupoChat(), ChatNuevo.NOMBRE_CLIENTE, ChatNuevo.DESCRIPCION_CLIENTE);
+        this.inputPipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(ChatNuevo.grupoChat, ChatNuevo.NOMBRE_CLIENTE, ChatNuevo.DESCRIPCION_CLIENTE);
         PipeInputListener listener = new PipeInputListener();
-        this.inputPipe = UtilidadesJXTA.crearInputPipe(chat.getGrupoChat(), inputPipeAdvertisement, listener);
-        UtilidadesJXTA.publicarAdvertisement(chat.getGrupoChat(), inputPipeAdvertisement);
+        this.inputPipe = UtilidadesJXTA.crearInputPipe(ChatNuevo.grupoChat, inputPipeAdvertisement, listener);
+        UtilidadesJXTA.publicarAdvertisement(ChatNuevo.grupoChat, inputPipeAdvertisement);
         TimerBusquedaListener timerListener = new TimerBusquedaListener();
         this.timerBusqueda = new Timer(UtilidadesJXTA.DELAY_BUSQUEDA, timerListener);
         iniciarBusquedaServidor();
@@ -74,7 +74,7 @@ public class ChatClienteNuevo {
             inputPipe.close();
         }
         if (inputPipeAdvertisement != null) {
-            UtilidadesJXTA.eliminarAdvertisement(chat.getGrupoChat(), inputPipeAdvertisement);
+            UtilidadesJXTA.eliminarAdvertisement(ChatNuevo.grupoChat, inputPipeAdvertisement);
         }
         cerrarPipeServidor();
     }
@@ -87,14 +87,14 @@ public class ChatClienteNuevo {
         Advertisement adv = null;
         Enumeration<Advertisement> en = null;
         try {
-            en = chat.getGrupoChat().getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR);
+            en = ChatNuevo.grupoChat.getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR);
         } catch (IOException ex) {
             System.out.println("IOException: No se encontraron advertisements locales");
         }
         if (en != null) {
             while (en.hasMoreElements()) {
                 adv = en.nextElement();
-                UtilidadesJXTA.eliminarAdvertisement(chat.getGrupoChat(), adv);
+                UtilidadesJXTA.eliminarAdvertisement(ChatNuevo.grupoChat, adv);
             }
         }
     }
@@ -106,24 +106,30 @@ public class ChatClienteNuevo {
         System.out.print(".");
         System.out.flush();
         PipeAdvertisement adv = null;
-        BusquedaListener busquedaListener = new BusquedaListener();
+        //BusquedaListener busquedaListener = new BusquedaListener();
         String peerId = null; // Busca todos los peers
         int numeroAdvertisements = 1; // un advertisement por Peer
-        chat.getGrupoChat().getDiscoveryService().getRemoteAdvertisements(peerId, DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR, numeroAdvertisements, busquedaListener);
+        ChatNuevo.grupoChat.getDiscoveryService().getRemoteAdvertisements(peerId, DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR, numeroAdvertisements);//, busquedaListener);
         Enumeration<Advertisement> en = null;
         try {
-            en = chat.getGrupoChat().getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR);
+            en = ChatNuevo.grupoChat.getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR);
         } catch (IOException ex) {
             System.out.println("IOException: No se encontraron advertisements locales");
         }
         if (en != null) {
             while (en.hasMoreElements()) {
                 adv = (PipeAdvertisement) en.nextElement();
-                servidor = UtilidadesJXTA.crearOuputPipe(chat.getGrupoChat(), adv);
+                servidor = UtilidadesJXTA.crearOuputPipe(ChatNuevo.grupoChat, adv);
                 if (servidor != null) {
+                    try {
+                        Message message = new Message();
+                        StringMessageElement clienteElement = new StringMessageElement("cliente", inputPipeAdvertisement.toString(), null);
+                        message.addMessageElement(clienteElement);
+                        servidor.send(message);
+                    } catch (IOException ex) {
+                        System.out.println("IOException: No se puede enviar el mensaje");
+                    }
                     terminarBusquedaServidor();
-                    //String servidorPeerID = ?????;
-                    //UtilidadesJXTA.publicarAdvertisementRemoto(chat.getGrupoChat(), servidorPeerID, adv);
                     break;
                 }
             }
@@ -136,10 +142,10 @@ public class ChatClienteNuevo {
                 Message message = new Message();
                 StringMessageElement remitenteElement = new StringMessageElement("remitente", remitente, null);
                 StringMessageElement mensajeElement = new StringMessageElement("mensaje", mensaje, null);
-                StringMessageElement clienteElement = new StringMessageElement("cliente", inputPipeAdvertisement.toString(), null);
+                StringMessageElement advertisementIDElement = new StringMessageElement("advertisementID", inputPipeAdvertisement.getID().toString(), null);
                 message.addMessageElement(remitenteElement);
                 message.addMessageElement(mensajeElement);
-                message.addMessageElement(clienteElement);
+                message.addMessageElement(advertisementIDElement);
                 servidor.send(message);
             } catch (IOException ex) {
                 System.out.println("IOException: No se puede enviar el mensaje");
@@ -167,7 +173,7 @@ public class ChatClienteNuevo {
                 chat.mostrarMensajeChat(remitente.toString(), mensaje.toString());
             } else if (cerrar != null) {
                 PipeAdvertisement advertisement = UtilidadesJXTA.crearPipeAdvertisementFromString(cerrar.toString());
-                UtilidadesJXTA.eliminarAdvertisement(chat.getGrupoChat(), advertisement);
+                UtilidadesJXTA.eliminarAdvertisement(ChatNuevo.grupoChat, advertisement);
                 iniciarBusquedaServidor();
             } else {
                 chat.mostrarMensajeChat("Error", "No se pudo mostrar el mensaje");

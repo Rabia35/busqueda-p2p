@@ -29,10 +29,10 @@ public class ChatServidorNuevo {
     
     public ChatServidorNuevo(ChatNuevo chat) {
         this.chat = chat;
-        this.inputPipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(chat.getGrupoChat(), ChatNuevo.NOMBRE_SERVIDOR, ChatNuevo.DESCRIPCION_SERVIDOR);
+        this.inputPipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(ChatNuevo.grupoChat, ChatNuevo.NOMBRE_SERVIDOR, ChatNuevo.DESCRIPCION_SERVIDOR);
         PipeInputListener listener = new PipeInputListener();
-        this.inputPipe = UtilidadesJXTA.crearInputPipe(chat.getGrupoChat(), inputPipeAdvertisement, listener);
-        UtilidadesJXTA.publicarAdvertisement(chat.getGrupoChat(), inputPipeAdvertisement);
+        this.inputPipe = UtilidadesJXTA.crearInputPipe(ChatNuevo.grupoChat, inputPipeAdvertisement, listener);
+        UtilidadesJXTA.publicarAdvertisement(ChatNuevo.grupoChat, inputPipeAdvertisement);
         this.clientes = new Vector<OutputPipe>(0, 10);
     }
 
@@ -48,7 +48,7 @@ public class ChatServidorNuevo {
             inputPipe.close();
         }
         if (inputPipeAdvertisement != null) {
-            UtilidadesJXTA.eliminarAdvertisement(chat.getGrupoChat(), inputPipeAdvertisement);
+            UtilidadesJXTA.eliminarAdvertisement(ChatNuevo.grupoChat, inputPipeAdvertisement);
         }
         for (OutputPipe outputPipe : clientes) {
             if (outputPipe != null) {
@@ -79,11 +79,27 @@ public class ChatServidorNuevo {
         }
     }
 
+    private void guardarCliente(PipeAdvertisement advertisement) {
+        boolean encontrado = false;
+        for (OutputPipe pipe : clientes) {
+            if (pipe != null) {
+                if (pipe.getAdvertisement().getID() == advertisement.getID()) {
+                    encontrado = true;
+                }
+            }
+        }
+        if (!encontrado) {
+            OutputPipe cliente = UtilidadesJXTA.crearOuputPipe(ChatNuevo.grupoChat, advertisement);
+            clientes.addElement(cliente);
+            chat.mostrarMensajeChat("Servidor", "El cliente '" + advertisement.getName() + "' se ha conectado.");
+            chat.mostrarMensajeChat("Servidor", "El ID del cliente es: " + advertisement.getID().toString() + "\n");
+        }
+    }
+
     // Clase para escuchar los mensajes de entrada
     private class PipeInputListener implements PipeMsgListener {
         @Override
         public void pipeMsgEvent(PipeMsgEvent pmevent) {
-            boolean encontrado = false;
             PipeAdvertisement advertisement = null;
             Message message = pmevent.getMessage();
             if (!message.getMessageElements().hasNext()) {
@@ -92,20 +108,13 @@ public class ChatServidorNuevo {
             // Por nombre del elemento
             MessageElement remitente = message.getMessageElement("remitente");
             MessageElement mensaje  = message.getMessageElement("mensaje");
+            MessageElement advertisementID  = message.getMessageElement("advertisementID");
             MessageElement cliente  = message.getMessageElement("cliente");
-            if (remitente != null && mensaje != null && cliente != null) {
-                advertisement = UtilidadesJXTA.crearPipeAdvertisementFromString(cliente.toString());
+            if (remitente != null && mensaje != null && advertisementID != null) {
                 chat.mostrarMensajeChat(remitente.toString(), mensaje.toString());
-            } else {
-                chat.mostrarMensajeChat("Error", "No se pudo mostrar el mensaje");
-                return;
-            }
-            // Envia el mensaje a todos los clientes
-            for (OutputPipe outputPipe : clientes) {
-                if (outputPipe != null) {
-                    if (outputPipe.getAdvertisement().getID() == advertisement.getID()) {
-                        encontrado = true;
-                    } else {
+                // Envia el mensaje a todos los demas clientes
+                for (OutputPipe outputPipe : clientes) {
+                    if ( (outputPipe != null) && !outputPipe.getAdvertisement().getID().toString().equals(advertisementID.toString())) {
                         Message msg = new Message();
                         StringMessageElement remitenteElement = new StringMessageElement("remitente", remitente.toString(), null);
                         StringMessageElement mensajeElement = new StringMessageElement("mensaje", mensaje.toString(), null);
@@ -114,15 +123,16 @@ public class ChatServidorNuevo {
                         try {
                             outputPipe.send(msg);
                         } catch (IOException ex) {
-                            System.out.println("IOException: No se pudo enviar el mensaje");
+                            System.out.println("IOException: No se pudo enviar el mensaje en el servidor.");
                         }
                     }
                 }
-            }
-            if (!encontrado) {
-                OutputPipe clienteOutputPipe = UtilidadesJXTA.crearOuputPipe(chat.getGrupoChat(), advertisement);
-                clientes.addElement(clienteOutputPipe);
-            }
+            } else if (cliente != null) {
+                advertisement = UtilidadesJXTA.crearPipeAdvertisementFromString(cliente.toString());
+                guardarCliente(advertisement);
+            }else {
+                chat.mostrarMensajeChat("Error", "No se puede descifrar el mensaje.");
+            }            
         }
     }
 

@@ -58,7 +58,6 @@ public class ChatBiDi {
 
     public void iniciar(String nombre, String descripcion) throws IOException {
         System.out.println("Iniciando el Chat");
-        //grupoChat = netPeerGroup;
         ChatBiDi.grupoChat = UtilidadesJXTA.crearGrupo(ChatBiDi.netPeerGroup, NOMBRE_GRUPO, DESCRIPCION_GRUPO);
         if (ChatBiDi.grupoChat != null) {
             UtilidadesJXTA.iniciarGrupo(ChatBiDi.grupoChat);
