@@ -11,11 +11,13 @@ import net.jxta.peergroup.PeerGroup;
  * @author almunoz
  */
 public class ChatNuevo {
+    public static final int PIPE_TIMEOUT  = 5 * 1000;
+    public static final int DELAY_BUSQUEDA  = 10 * 1000;
     public static final String NOMBRE_GRUPO = "Chat PeerGroup";
-    public static final String DESCRIPCION_GRUPO = "Descripcion del Chat PeerGroup";
-    public static final String NOMBRE_CLIENTE = "chat-cliente";
+    public static final String DESCRIPCION_GRUPO = "PeerGroup del Chat";
+    public static final String NOMBRE_CLIENTE = "Chat Cliente";
     public static final String DESCRIPCION_CLIENTE = "Cliente del Chat";
-    public static final String NOMBRE_SERVIDOR = "chat-servidor";
+    public static final String NOMBRE_SERVIDOR = "Chat Servidor";
     public static final String DESCRIPCION_SERVIDOR = "Servidor del Chat";
     // Peer
     private PeerBusqueda peer;
@@ -24,27 +26,22 @@ public class ChatNuevo {
     // Cliente
     private ChatClienteNuevo cliente;
     // Grupos
-    private PeerGroup netPeerGroup;
-    private PeerGroup grupoChat;
+    private static PeerGroup netPeerGroup;
+    public static PeerGroup grupoChat;
 
     public ChatNuevo(PeerBusqueda peer) {
         this.peer = peer;
-        this.netPeerGroup = peer.getNetPeerGroup();
-        this.grupoChat = null;
         this.servidor = null;
         this.cliente = null;
-    }
-
-    public PeerGroup getGrupoChat() {
-        return grupoChat;
+        ChatNuevo.netPeerGroup = peer.getNetPeerGroup();
+        ChatNuevo.grupoChat = null;
     }
 
     public void iniciar(String nombre, String descripcion) throws IOException {
         System.out.println("Iniciando el Chat");
-        //grupoChat = netPeerGroup;
-        grupoChat = UtilidadesJXTA.crearGrupo(netPeerGroup, NOMBRE_GRUPO, DESCRIPCION_GRUPO);
-        if (grupoChat != null) {
-            UtilidadesJXTA.iniciarGrupo(grupoChat);
+        ChatNuevo.grupoChat = UtilidadesJXTA.crearGrupo(ChatNuevo.netPeerGroup, ChatNuevo.NOMBRE_GRUPO, ChatNuevo.DESCRIPCION_GRUPO);
+        if (ChatNuevo.grupoChat != null) {
+            UtilidadesJXTA.iniciarGrupo(ChatNuevo.grupoChat);
         }
         if (PeerBusqueda.SERVIDOR_CHAT) {
             System.out.println("Iniciando el Servidor");
@@ -57,7 +54,6 @@ public class ChatNuevo {
 
     public void terminar() {
         System.out.println("Deteniendo el Chat");
-        UtilidadesJXTA.terminarGrupo(grupoChat);
         if (PeerBusqueda.SERVIDOR_CHAT) {
             System.out.println("Deteniendo el Servidor");
             this.servidor.detener();
@@ -65,6 +61,7 @@ public class ChatNuevo {
             System.out.println("Deteniendo el Cliente");
             this.cliente.detener();
         }
+        UtilidadesJXTA.terminarGrupo(ChatNuevo.grupoChat);
     }
 
     public void enviarMensaje(String remitente, String mensaje) throws IOException {

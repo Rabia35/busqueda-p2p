@@ -2,7 +2,7 @@
 package busqueda.jxta;
 
 import busqueda.JXTACommunicator;
-import busqueda.jxta.chatbidi.ChatBiDi;
+import busqueda.jxta.chatnuevo.ChatNuevo;
 import jade.wrapper.StaleProxyException;
 import java.io.IOException;
 import net.jxta.exception.PeerGroupException;
@@ -26,7 +26,7 @@ public class PeerBusqueda {
     private PeerGroup netPeerGroup;
     private String puerto;
     // Chat
-    private ChatBiDi chat;
+    private ChatNuevo chat;
     
     public PeerBusqueda(JXTACommunicator jxtaCommunicator) {
         this.jxtaCommunicator = jxtaCommunicator;
@@ -107,7 +107,7 @@ public class PeerBusqueda {
 
     public void iniciarChat(String nombre, String descripcion) {
         try {
-            chat = new ChatBiDi(this);
+            chat = new ChatNuevo(this);
             chat.iniciar(nombre, descripcion);
         } catch (IOException ex) {
             System.out.println("IOException: " + ex.getMessage());
