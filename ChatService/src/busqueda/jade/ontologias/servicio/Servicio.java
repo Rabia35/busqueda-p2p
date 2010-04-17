@@ -8,28 +8,12 @@ import jade.content.Concept;
  * @author almunoz
  */
 public class Servicio implements Concept {
-    private String nombre;
     private String tipo;
     private String descripcion;
 
     public Servicio() {
-        this.nombre = "tipo-service";
         this.tipo = "tipo";
         this.descripcion = "tipo-descripcion";
-    }
-
-    /**
-     * @return the nombre
-     */
-    public String getNombre() {
-        return nombre;
-    }
-
-    /**
-     * @param nombre the nombre to set
-     */
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
     }
 
     /**

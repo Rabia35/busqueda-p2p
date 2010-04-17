@@ -26,8 +26,8 @@ public class OntologiaMensaje extends BeanOntology {
             // Concepto
             this.add(Mensaje.class);
             // Predicados
-            this.add(Enviar.class);
-            this.add(Mostrar.class);
+            this.add(EnviarMensaje.class);
+            this.add(MostrarMensaje.class);
         } catch (BeanOntologyException ex) {
             System.out.println("BeanOntologyException: " + ex.getMessage());
         }

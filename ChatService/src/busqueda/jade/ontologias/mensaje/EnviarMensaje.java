@@ -7,10 +7,10 @@ import jade.content.Predicate;
  *
  * @author almunoz
  */
-public class Enviar implements Predicate {
+public class EnviarMensaje implements Predicate {
     private Mensaje mensaje;
 
-    public Enviar() {
+    public EnviarMensaje() {
         this.mensaje = new Mensaje();
     }
 

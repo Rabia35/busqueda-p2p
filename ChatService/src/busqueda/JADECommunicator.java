@@ -61,8 +61,8 @@ public class JADECommunicator {
 
     /* METODOS PARA EL CHAT */
 
-    public void iniciarChat(String nombre, String descripcion) {
-        jxtaCommunicator.iniciarChat(nombre, descripcion);
+    public void iniciarChat(String tipo, String descripcion) {
+        jxtaCommunicator.iniciarChat(tipo, descripcion);
     }
 
     public void enviarMensajeChatJXTA(String remitente, String mensaje) {

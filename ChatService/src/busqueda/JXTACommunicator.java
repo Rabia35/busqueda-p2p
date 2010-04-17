@@ -60,11 +60,11 @@ public class JXTACommunicator {
 
     /* METODOS PARA EL CHAT */
 
-    public void iniciarChat(final String nombre, final String descripcion) {
-        peer.iniciarChat(nombre, descripcion);
+    public void iniciarChat(String tipo, String descripcion) {
+        peer.iniciarChat(tipo, descripcion);
     }
 
-    public void enviarMensajeChat(final String remitente, final String mensaje) {
+    public void enviarMensajeChat(String remitente, String mensaje) {
         peer.enviarMensajeChat(remitente, mensaje);
     }
 
