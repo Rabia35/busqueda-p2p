@@ -1,5 +1,5 @@
 
-package busqueda.jxta.chatnuevo;
+package busqueda.jxta.chat;
 
 import busqueda.jxta.UtilidadesJXTA;
 import java.awt.event.ActionEvent;
@@ -25,9 +25,9 @@ import net.jxta.protocol.PipeAdvertisement;
  *
  * @author almunoz
  */
-public class ChatClienteNuevo {
+public class ChatCliente {
     // El objeto del Chat
-    private ChatNuevo chat;
+    private Chat chat;
     // Servidor: Advertisement, canal y datos de busqueda
     private OutputPipe servidor;
     // Cliente: Advertisement y Canal de Comunicacion (InputPipe)
@@ -36,13 +36,13 @@ public class ChatClienteNuevo {
     // Timer, para buscar advertisements remotos cada cierto tiempo
     private Timer timerBusqueda;
 
-    public ChatClienteNuevo(ChatNuevo chat) {
+    public ChatCliente(Chat chat) {
         this.chat = chat;
         this.servidor = null;
-        this.inputPipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(ChatNuevo.grupoChat, ChatNuevo.NOMBRE_CLIENTE, ChatNuevo.DESCRIPCION_CLIENTE);
+        this.inputPipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(Chat.grupoChat, Chat.NOMBRE_CLIENTE, Chat.DESCRIPCION_CLIENTE);
         PipeInputListener listener = new PipeInputListener();
-        this.inputPipe = UtilidadesJXTA.crearInputPipe(ChatNuevo.grupoChat, inputPipeAdvertisement, listener);
-        UtilidadesJXTA.publicarAdvertisement(ChatNuevo.grupoChat, inputPipeAdvertisement);
+        this.inputPipe = UtilidadesJXTA.crearInputPipe(Chat.grupoChat, inputPipeAdvertisement, listener);
+        UtilidadesJXTA.publicarAdvertisement(Chat.grupoChat, inputPipeAdvertisement);
         TimerBusquedaListener timerListener = new TimerBusquedaListener();
         this.timerBusqueda = new Timer(UtilidadesJXTA.DELAY_BUSQUEDA, timerListener);
         iniciarBusquedaServidor();
@@ -74,7 +74,7 @@ public class ChatClienteNuevo {
             inputPipe.close();
         }
         if (inputPipeAdvertisement != null) {
-            UtilidadesJXTA.eliminarAdvertisement(ChatNuevo.grupoChat, inputPipeAdvertisement);
+            UtilidadesJXTA.eliminarAdvertisement(Chat.grupoChat, inputPipeAdvertisement);
         }
         cerrarPipeServidor();
     }
@@ -87,14 +87,14 @@ public class ChatClienteNuevo {
         Advertisement adv = null;
         Enumeration<Advertisement> en = null;
         try {
-            en = ChatNuevo.grupoChat.getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR);
+            en = Chat.grupoChat.getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, Chat.NOMBRE_SERVIDOR);
         } catch (IOException ex) {
             System.out.println("IOException: No se encontraron advertisements locales");
         }
         if (en != null) {
             while (en.hasMoreElements()) {
                 adv = en.nextElement();
-                UtilidadesJXTA.eliminarAdvertisement(ChatNuevo.grupoChat, adv);
+                UtilidadesJXTA.eliminarAdvertisement(Chat.grupoChat, adv);
             }
         }
     }
@@ -109,17 +109,17 @@ public class ChatClienteNuevo {
         //BusquedaListener busquedaListener = new BusquedaListener();
         String peerId = null; // Busca todos los peers
         int numeroAdvertisements = 1; // un advertisement por Peer
-        ChatNuevo.grupoChat.getDiscoveryService().getRemoteAdvertisements(peerId, DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR, numeroAdvertisements);//, busquedaListener);
+        Chat.grupoChat.getDiscoveryService().getRemoteAdvertisements(peerId, DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, Chat.NOMBRE_SERVIDOR, numeroAdvertisements);//, busquedaListener);
         Enumeration<Advertisement> en = null;
         try {
-            en = ChatNuevo.grupoChat.getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, ChatNuevo.NOMBRE_SERVIDOR);
+            en = Chat.grupoChat.getDiscoveryService().getLocalAdvertisements(DiscoveryService.ADV, UtilidadesJXTA.ATRIBUTO_BUSQUEDA, Chat.NOMBRE_SERVIDOR);
         } catch (IOException ex) {
             System.out.println("IOException: No se encontraron advertisements locales");
         }
         if (en != null) {
             while (en.hasMoreElements()) {
                 adv = (PipeAdvertisement) en.nextElement();
-                servidor = UtilidadesJXTA.crearOuputPipe(ChatNuevo.grupoChat, adv);
+                servidor = UtilidadesJXTA.crearOuputPipe(Chat.grupoChat, adv);
                 if (servidor != null) {
                     try {
                         Message message = new Message();
@@ -173,7 +173,7 @@ public class ChatClienteNuevo {
                 chat.mostrarMensajeChat(remitente.toString(), mensaje.toString());
             } else if (cerrar != null) {
                 PipeAdvertisement advertisement = UtilidadesJXTA.crearPipeAdvertisementFromString(cerrar.toString());
-                UtilidadesJXTA.eliminarAdvertisement(ChatNuevo.grupoChat, advertisement);
+                UtilidadesJXTA.eliminarAdvertisement(Chat.grupoChat, advertisement);
                 iniciarBusquedaServidor();
             } else {
                 chat.mostrarMensajeChat("Error", "No se pudo mostrar el mensaje");
