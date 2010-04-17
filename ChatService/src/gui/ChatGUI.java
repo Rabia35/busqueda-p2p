@@ -83,6 +83,7 @@ public class ChatGUI extends javax.swing.JFrame {
         });
 
         jTextAreaMensajes.setColumns(20);
+        jTextAreaMensajes.setEditable(false);
         jTextAreaMensajes.setLineWrap(true);
         jTextAreaMensajes.setRows(5);
         jTextAreaMensajes.setTabSize(4);
@@ -167,8 +168,9 @@ public class ChatGUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonLimpiarActionPerformed
 
     public void deshabilitar() {
-        jTextFieldMensaje.setEnabled(false);
-        jButtonEnviar.setEnabled(false);
+        jLabelMensaje.setVisible(false);
+        jTextFieldMensaje.setVisible(false);
+        jButtonEnviar.setVisible(false);
     }
 
     public void mostrarAdvertisements() {
