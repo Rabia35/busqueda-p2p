@@ -105,10 +105,10 @@ public class PeerBusqueda {
     
     /* Para el chat*/
 
-    public void iniciarChat(String nombre, String descripcion) {
+    public void iniciarChat(String tipo, String descripcion) {
         try {
             chat = new ChatNuevo(this);
-            chat.iniciar(nombre, descripcion);
+            chat.iniciar(tipo, descripcion);
         } catch (IOException ex) {
             System.out.println("IOException: " + ex.getMessage());
         }

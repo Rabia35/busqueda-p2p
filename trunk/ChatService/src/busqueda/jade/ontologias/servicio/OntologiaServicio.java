@@ -26,8 +26,8 @@ public class OntologiaServicio extends BeanOntology {
             // Concepto
             this.add(Servicio.class);
             // Predicados
-            this.add(Publicar.class);
-            this.add(Despublicar.class);
+            this.add(PublicarServicio.class);
+            this.add(DespublicarServicio.class);
         } catch (BeanOntologyException ex) {
             System.out.println("OntologyException: " + ex.getMessage());
         }        

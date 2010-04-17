@@ -2,14 +2,15 @@
 package busqueda.jade.agentes;
 
 import busqueda.jade.JADEContainer;
+import busqueda.jade.UtilidadesJADE;
 import busqueda.jade.agentes.chat.AgenteChat;
-import busqueda.jade.comportamientos.RegistrarServicioBehaviour;
-import busqueda.jade.ontologias.mensaje.Enviar;
+import busqueda.jade.comportamientos.RegistrarServicioDFBehaviour;
+import busqueda.jade.ontologias.mensaje.EnviarMensaje;
 import busqueda.jade.ontologias.mensaje.Mensaje;
-import busqueda.jade.ontologias.mensaje.Mostrar;
+import busqueda.jade.ontologias.mensaje.MostrarMensaje;
 import busqueda.jade.ontologias.mensaje.OntologiaMensaje;
 import busqueda.jade.ontologias.servicio.OntologiaServicio;
-import busqueda.jade.ontologias.servicio.Publicar;
+import busqueda.jade.ontologias.servicio.PublicarServicio;
 import busqueda.jade.ontologias.servicio.Servicio;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
@@ -23,8 +24,6 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
 /**
@@ -32,9 +31,8 @@ import jade.lang.acl.ACLMessage;
  * @author almunoz
  */
 public class AgenteJXTA extends Agent {
-    public static String NOMBRE_SERVICIO = "chat-jxta-service";
-    public static String TIPO_SERVICIO = "chat-jxta";
-    public static String DESCRIPCION_SERVICIO = "chat-jxta-descripcion";
+    public static final String TIPO_SERVICIO = "jxta-service";
+    public static final String DESCRIPCION_SERVICIO = "Servicio de Comunicacion JXTA";
     // El container que realiza la conexion con el JADE Communicator
     private JADEContainer jadeContainer;
     // Agente del Chat
@@ -62,7 +60,7 @@ public class AgenteJXTA extends Agent {
         // Mensaje de inicio
         System.out.println("El agente " + this.getName() + " se ha iniciado.");
         // Comportamientos
-        this.addBehaviour(new RegistrarServicioBehaviour(this, AgenteJXTA.NOMBRE_SERVICIO, AgenteJXTA.TIPO_SERVICIO));
+        this.addBehaviour(new RegistrarServicioDFBehaviour(this, AgenteJXTA.TIPO_SERVICIO, AgenteJXTA.DESCRIPCION_SERVICIO));
         this.addBehaviour(new BuscarAgenteChatBehaviour(this, 5000));
         this.addBehaviour(new EnviarMensajeO2ABehaviour(this));
         this.addBehaviour(new RecibirMensajeBehaviour(this));
@@ -70,17 +68,8 @@ public class AgenteJXTA extends Agent {
 
     @Override
     protected void takeDown() {
-        deregistrarServicio();
+        UtilidadesJADE.deregistrarServicio(this, AgenteJXTA.TIPO_SERVICIO);
         System.out.println("El agente " + this.getName() + " ha terminado.");
-    }
-
-    private void deregistrarServicio() {
-        try {
-            DFService.deregister(this);
-            System.out.println("El servicio " + AgenteJXTA.NOMBRE_SERVICIO + " ya no esta registrado.");
-        } catch (FIPAException fex) {
-            System.out.println("FIPAException: " + fex.getMessage());
-        }
     }
 
     /*******************/
@@ -95,7 +84,7 @@ public class AgenteJXTA extends Agent {
 
         @Override
         protected void onTick() {
-            agenteChat = JADEContainer.buscarAgente(myAgent, AgenteChat.TIPO_SERVICIO);
+            agenteChat = UtilidadesJADE.buscarAgente(myAgent, AgenteChat.TIPO_SERVICIO);
             if (agenteChat != null) {
                 this.stop();
             }
@@ -118,7 +107,7 @@ public class AgenteJXTA extends Agent {
                     acl.addReceiver(agenteChat);
                     acl.setLanguage(codec.getName());
                     acl.setOntology(ontologiaMensaje.getName());
-                    Mostrar mostrar = new Mostrar();
+                    MostrarMensaje mostrar = new MostrarMensaje();
                     mostrar.setMensaje(mensaje);
                     myAgent.getContentManager().fillContent(acl, mostrar);
                     myAgent.send(acl);
@@ -147,12 +136,13 @@ public class AgenteJXTA extends Agent {
                 if (acl.getPerformative() == ACLMessage.REQUEST) {
                     try {
                         ContentElement elemento = myAgent.getContentManager().extractContent(acl);
-                        if (elemento instanceof Publicar) {
-                            Publicar publicar = (Publicar) elemento;
+                        if (elemento instanceof PublicarServicio) {
+                            PublicarServicio publicar = (PublicarServicio) elemento;
                             Servicio servicio = publicar.getServicio();
-                            myAgent.addBehaviour(new IniciarChatBehaviour(myAgent, servicio.getTipo(), servicio.getDescripcion()));
-                        } else if (elemento instanceof Enviar) {
-                            Enviar enviar = (Enviar) elemento;
+                            jadeContainer.iniciarChat(servicio.getTipo(), servicio.getDescripcion());
+                            //myAgent.addBehaviour(new IniciarChatBehaviour(myAgent, servicio.getTipo(), servicio.getDescripcion()));
+                        } else if (elemento instanceof EnviarMensaje) {
+                            EnviarMensaje enviar = (EnviarMensaje) elemento;
                             Mensaje mensaje = enviar.getMensaje();
                             jadeContainer.enviarMensajeChatJXTA(mensaje.getRemitente(), mensaje.getMensaje());
                         }

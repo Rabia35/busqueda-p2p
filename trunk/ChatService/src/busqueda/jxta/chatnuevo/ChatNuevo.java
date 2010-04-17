@@ -13,12 +13,12 @@ import net.jxta.peergroup.PeerGroup;
 public class ChatNuevo {
     public static final int PIPE_TIMEOUT  = 5 * 1000;
     public static final int DELAY_BUSQUEDA  = 10 * 1000;
-    public static final String NOMBRE_GRUPO = "Chat PeerGroup";
-    public static final String DESCRIPCION_GRUPO = "PeerGroup del Chat";
-    public static final String NOMBRE_CLIENTE = "Chat Cliente";
-    public static final String DESCRIPCION_CLIENTE = "Cliente del Chat";
-    public static final String NOMBRE_SERVIDOR = "Chat Servidor";
-    public static final String DESCRIPCION_SERVIDOR = "Servidor del Chat";
+    public static String NOMBRE_GRUPO = "peergroup";
+    public static String DESCRIPCION_GRUPO = "PeerGroup del ";
+    public static String NOMBRE_CLIENTE = "cliente";
+    public static String DESCRIPCION_CLIENTE = "Cliente del ";
+    public static String NOMBRE_SERVIDOR = "servidor";
+    public static String DESCRIPCION_SERVIDOR = "Servidor del ";
     // Peer
     private PeerBusqueda peer;
     // Servidor
@@ -37,17 +37,23 @@ public class ChatNuevo {
         ChatNuevo.grupoChat = null;
     }
 
-    public void iniciar(String nombre, String descripcion) throws IOException {
+    public void iniciar(String tipo, String descripcion) throws IOException {
+        ChatNuevo.NOMBRE_GRUPO = tipo + "-" + ChatNuevo.NOMBRE_GRUPO;
+        ChatNuevo.DESCRIPCION_GRUPO = ChatNuevo.DESCRIPCION_GRUPO + descripcion;
+        ChatNuevo.NOMBRE_CLIENTE = tipo + "-" + ChatNuevo.NOMBRE_CLIENTE;
+        ChatNuevo.DESCRIPCION_CLIENTE = ChatNuevo.DESCRIPCION_CLIENTE + descripcion;
+        ChatNuevo.NOMBRE_SERVIDOR = tipo + "-" + ChatNuevo.NOMBRE_SERVIDOR;
+        ChatNuevo.DESCRIPCION_SERVIDOR = ChatNuevo.DESCRIPCION_SERVIDOR + descripcion;
         System.out.println("Iniciando el Chat");
         ChatNuevo.grupoChat = UtilidadesJXTA.crearGrupo(ChatNuevo.netPeerGroup, ChatNuevo.NOMBRE_GRUPO, ChatNuevo.DESCRIPCION_GRUPO);
         if (ChatNuevo.grupoChat != null) {
             UtilidadesJXTA.iniciarGrupo(ChatNuevo.grupoChat);
         }
         if (PeerBusqueda.SERVIDOR_CHAT) {
-            System.out.println("Iniciando el Servidor");
+            System.out.println("Iniciando el servidor '" + ChatNuevo.NOMBRE_SERVIDOR + "'");
             this.servidor = new ChatServidorNuevo(this);
         } else {
-            System.out.println("Iniciando el Cliente");
+            System.out.println("Iniciando el cliente '" + ChatNuevo.NOMBRE_CLIENTE + "'");
             this.cliente = new ChatClienteNuevo(this);
         }
     }
@@ -55,10 +61,10 @@ public class ChatNuevo {
     public void terminar() {
         System.out.println("Deteniendo el Chat");
         if (PeerBusqueda.SERVIDOR_CHAT) {
-            System.out.println("Deteniendo el Servidor");
+            System.out.println("Deteniendo el servidor '" + ChatNuevo.NOMBRE_SERVIDOR + "'");
             this.servidor.detener();
         } else {
-            System.out.println("Deteniendo el Cliente");
+            System.out.println("Deteniendo el cliente '" + ChatNuevo.NOMBRE_CLIENTE + "'");
             this.cliente.detener();
         }
         UtilidadesJXTA.terminarGrupo(ChatNuevo.grupoChat);

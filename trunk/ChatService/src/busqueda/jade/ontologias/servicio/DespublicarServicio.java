@@ -7,10 +7,10 @@ import jade.content.Predicate;
  *
  * @author almunoz
  */
-public class Publicar implements Predicate {
+public class DespublicarServicio implements Predicate {
     private Servicio servicio;
 
-    public Publicar() {
+    public DespublicarServicio() {
         this.servicio = new Servicio();
     }
 

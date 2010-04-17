@@ -3,17 +3,9 @@ package busqueda.jade;
 
 import busqueda.JADECommunicator;
 import busqueda.jade.ontologias.mensaje.Mensaje;
-import busqueda.utilidades.Utilidades;
-import jade.core.AID;
-import jade.core.Agent;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.SearchConstraints;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
@@ -98,8 +90,8 @@ public class JADEContainer {
     }
 
     /* METODOS PARA EL CHAT */
-    public void iniciarChat(String nombre, String descripcion) {
-        jadeCommunicator.iniciarChat(nombre, descripcion);
+    public void iniciarChat(String tipo, String descripcion) {
+        jadeCommunicator.iniciarChat(tipo, descripcion);
     }
 
     public void enviarMensajeChatJXTA(String remitente, String mensaje) {
@@ -119,38 +111,6 @@ public class JADEContainer {
         msg.setRemitente(remitente);
         msg.setMensaje(mensaje);
         agenteJXTA.putO2AObject(msg, AgentController.ASYNC);
-    }
-
-    /* Metodos de clase */
-    
-    /**
-     * Busca un agente por el tipo de servicio que presta
-     * @param agente El agente que realiza la busqueda
-     * @param tipoServicio El tipo de servicio que se desea buscar
-     * @return El AID del agente encontrado, o null si no se encuentra
-     */
-    public static AID buscarAgente(Agent agente, String tipoServicio) {
-        AID resultado = null;
-        try {
-            // Crea una descripcion como plantilla para la busqueda
-            DFAgentDescription templateDfad = new DFAgentDescription();
-            ServiceDescription templateSd = new ServiceDescription();
-            templateSd.setType(tipoServicio);
-            templateDfad.addServices(templateSd);
-            // Los criterios de busqueda
-            SearchConstraints sc = new SearchConstraints();
-            sc.setMaxResults(new Long(1));
-            // Busca los agentes basadose en la plantilla y en los criterios
-            DFAgentDescription[] results = DFService.search(agente, templateDfad, sc);
-            if (results.length > 0) {
-                resultado = results[0].getName();
-                return resultado;
-            }
-        } catch (FIPAException ex) {
-            System.out.println("FIPAException: " + ex.getMessage());
-        }
-        System.out.println("El agente " + agente.getLocalName() + " no encontro el servicio " + tipoServicio);
-        return resultado;
     }
     
 }

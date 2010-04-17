@@ -2,11 +2,12 @@
 package busqueda.jade.agentes;
 
 import busqueda.jade.JADEContainer;
+import busqueda.jade.UtilidadesJADE;
 import busqueda.jade.agentes.chat.AgenteChat;
-import busqueda.jade.comportamientos.RegistrarServicioBehaviour;
-import busqueda.jade.ontologias.mensaje.Enviar;
+import busqueda.jade.comportamientos.RegistrarServicioDFBehaviour;
+import busqueda.jade.ontologias.mensaje.EnviarMensaje;
 import busqueda.jade.ontologias.mensaje.Mensaje;
-import busqueda.jade.ontologias.mensaje.Mostrar;
+import busqueda.jade.ontologias.mensaje.MostrarMensaje;
 import busqueda.jade.ontologias.mensaje.OntologiaMensaje;
 import jade.content.ContentElement;
 import jade.content.lang.Codec.CodecException;
@@ -18,8 +19,6 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
 /**
@@ -27,9 +26,8 @@ import jade.lang.acl.ACLMessage;
  * @author almunoz
  */
 public class AgenteGUI extends Agent {
-    public static String NOMBRE_SERVICIO = "chat-gui-service";
-    public static String TIPO_SERVICIO = "chat-gui";
-    public static String DESCRIPCION_SERVICIO = "chat-gui-descripcion";
+    public static final String TIPO_SERVICIO = "gui-service";
+    public static final String DESCRIPCION_SERVICIO = "Servicio de Interfaz Grafica";
     // El container que realiza la conexion con el JADE Communicator
     private JADEContainer jadeContainer;
     // Agente del Chat
@@ -54,7 +52,7 @@ public class AgenteGUI extends Agent {
         // Mensaje de inicio
         System.out.println("El agente " + this.getName() + " se ha iniciado.");
         // Comportamientos
-        this.addBehaviour(new RegistrarServicioBehaviour(this, AgenteGUI.NOMBRE_SERVICIO, AgenteGUI.TIPO_SERVICIO));
+        this.addBehaviour(new RegistrarServicioDFBehaviour(this, AgenteGUI.TIPO_SERVICIO, AgenteGUI.DESCRIPCION_SERVICIO));
         this.addBehaviour(new BuscarAgenteChatBehaviour(this, 5000));
         this.addBehaviour(new EnviarMensajeO2ABehaviour(this));
         this.addBehaviour(new RecibirMensajeBehaviour(this));
@@ -62,17 +60,8 @@ public class AgenteGUI extends Agent {
 
     @Override
     protected void takeDown() {
-        deregistrarServicio();
+        UtilidadesJADE.deregistrarServicio(this, AgenteGUI.TIPO_SERVICIO);
         System.out.println("El agente " + this.getName() + " ha terminado.");
-    }
-
-    private void deregistrarServicio() {
-        try {
-            DFService.deregister(this);
-            System.out.println("El servicio " + AgenteGUI.NOMBRE_SERVICIO + " ya no esta registrado.");
-        } catch (FIPAException fex) {
-            System.out.println("FIPAException: " + fex.getMessage());
-        }
     }
 
     /*******************/
@@ -87,7 +76,7 @@ public class AgenteGUI extends Agent {
 
         @Override
         protected void onTick() {
-            agenteChat = JADEContainer.buscarAgente(myAgent, AgenteChat.TIPO_SERVICIO);
+            agenteChat = UtilidadesJADE.buscarAgente(myAgent, AgenteChat.TIPO_SERVICIO);
             if (agenteChat != null) {
                 this.stop();
             }
@@ -115,7 +104,7 @@ public class AgenteGUI extends Agent {
                     mensaje.setRemitente(myAgent.getContainerController().getName());
                     mensaje.setMensaje(texto);
                     // Predicado
-                    Enviar enviar = new Enviar();
+                    EnviarMensaje enviar = new EnviarMensaje();
                     enviar.setMensaje(mensaje);
                     // Rellena el contenido
                     myAgent.getContentManager().fillContent(acl, enviar);
@@ -145,8 +134,8 @@ public class AgenteGUI extends Agent {
                 if (acl.getPerformative() == ACLMessage.REQUEST) {
                     try {
                         ContentElement elemento = myAgent.getContentManager().extractContent(acl);
-                        if (elemento instanceof Mostrar) {
-                            Mostrar mostrar = (Mostrar) elemento;
+                        if (elemento instanceof MostrarMensaje) {
+                            MostrarMensaje mostrar = (MostrarMensaje) elemento;
                             Mensaje mensaje = mostrar.getMensaje();
                             jadeContainer.mostrarMensajeChat(mensaje.getRemitente(), mensaje.getMensaje());
                         }
