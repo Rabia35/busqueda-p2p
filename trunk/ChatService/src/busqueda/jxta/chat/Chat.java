@@ -1,5 +1,5 @@
 
-package busqueda.jxta.chatnuevo;
+package busqueda.jxta.chat;
 
 import busqueda.jxta.PeerBusqueda;
 import busqueda.jxta.UtilidadesJXTA;
@@ -10,7 +10,7 @@ import net.jxta.peergroup.PeerGroup;
  *
  * @author almunoz
  */
-public class ChatNuevo {
+public class Chat {
     public static final int PIPE_TIMEOUT  = 5 * 1000;
     public static final int DELAY_BUSQUEDA  = 10 * 1000;
     public static String NOMBRE_GRUPO = "peergroup";
@@ -22,52 +22,52 @@ public class ChatNuevo {
     // Peer
     private PeerBusqueda peer;
     // Servidor
-    private ChatServidorNuevo servidor;
+    private ChatServidor servidor;
     // Cliente
-    private ChatClienteNuevo cliente;
+    private ChatCliente cliente;
     // Grupos
     private static PeerGroup netPeerGroup;
     public static PeerGroup grupoChat;
 
-    public ChatNuevo(PeerBusqueda peer) {
+    public Chat(PeerBusqueda peer) {
         this.peer = peer;
         this.servidor = null;
         this.cliente = null;
-        ChatNuevo.netPeerGroup = peer.getNetPeerGroup();
-        ChatNuevo.grupoChat = null;
+        Chat.netPeerGroup = peer.getNetPeerGroup();
+        Chat.grupoChat = null;
     }
 
     public void iniciar(String tipo, String descripcion) throws IOException {
-        ChatNuevo.NOMBRE_GRUPO = tipo + "-" + ChatNuevo.NOMBRE_GRUPO;
-        ChatNuevo.DESCRIPCION_GRUPO = ChatNuevo.DESCRIPCION_GRUPO + descripcion;
-        ChatNuevo.NOMBRE_CLIENTE = tipo + "-" + ChatNuevo.NOMBRE_CLIENTE;
-        ChatNuevo.DESCRIPCION_CLIENTE = ChatNuevo.DESCRIPCION_CLIENTE + descripcion;
-        ChatNuevo.NOMBRE_SERVIDOR = tipo + "-" + ChatNuevo.NOMBRE_SERVIDOR;
-        ChatNuevo.DESCRIPCION_SERVIDOR = ChatNuevo.DESCRIPCION_SERVIDOR + descripcion;
+        Chat.NOMBRE_GRUPO = tipo + "-" + Chat.NOMBRE_GRUPO;
+        Chat.DESCRIPCION_GRUPO = Chat.DESCRIPCION_GRUPO + descripcion;
+        Chat.NOMBRE_CLIENTE = tipo + "-" + Chat.NOMBRE_CLIENTE;
+        Chat.DESCRIPCION_CLIENTE = Chat.DESCRIPCION_CLIENTE + descripcion;
+        Chat.NOMBRE_SERVIDOR = tipo + "-" + Chat.NOMBRE_SERVIDOR;
+        Chat.DESCRIPCION_SERVIDOR = Chat.DESCRIPCION_SERVIDOR + descripcion;
         System.out.println("Iniciando el Chat");
-        ChatNuevo.grupoChat = UtilidadesJXTA.crearGrupo(ChatNuevo.netPeerGroup, ChatNuevo.NOMBRE_GRUPO, ChatNuevo.DESCRIPCION_GRUPO);
-        if (ChatNuevo.grupoChat != null) {
-            UtilidadesJXTA.iniciarGrupo(ChatNuevo.grupoChat);
+        Chat.grupoChat = UtilidadesJXTA.crearGrupo(Chat.netPeerGroup, Chat.NOMBRE_GRUPO, Chat.DESCRIPCION_GRUPO);
+        if (Chat.grupoChat != null) {
+            UtilidadesJXTA.iniciarGrupo(Chat.grupoChat);
         }
         if (PeerBusqueda.SERVIDOR_CHAT) {
-            System.out.println("Iniciando el servidor '" + ChatNuevo.NOMBRE_SERVIDOR + "'");
-            this.servidor = new ChatServidorNuevo(this);
+            System.out.println("Iniciando el servidor '" + Chat.NOMBRE_SERVIDOR + "'");
+            this.servidor = new ChatServidor(this);
         } else {
-            System.out.println("Iniciando el cliente '" + ChatNuevo.NOMBRE_CLIENTE + "'");
-            this.cliente = new ChatClienteNuevo(this);
+            System.out.println("Iniciando el cliente '" + Chat.NOMBRE_CLIENTE + "'");
+            this.cliente = new ChatCliente(this);
         }
     }
 
     public void terminar() {
         System.out.println("Deteniendo el Chat");
         if (PeerBusqueda.SERVIDOR_CHAT) {
-            System.out.println("Deteniendo el servidor '" + ChatNuevo.NOMBRE_SERVIDOR + "'");
+            System.out.println("Deteniendo el servidor '" + Chat.NOMBRE_SERVIDOR + "'");
             this.servidor.detener();
         } else {
-            System.out.println("Deteniendo el cliente '" + ChatNuevo.NOMBRE_CLIENTE + "'");
+            System.out.println("Deteniendo el cliente '" + Chat.NOMBRE_CLIENTE + "'");
             this.cliente.detener();
         }
-        UtilidadesJXTA.terminarGrupo(ChatNuevo.grupoChat);
+        UtilidadesJXTA.terminarGrupo(Chat.grupoChat);
     }
 
     public void enviarMensaje(String remitente, String mensaje) throws IOException {

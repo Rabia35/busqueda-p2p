@@ -1,5 +1,5 @@
 
-package busqueda.jxta.chatnuevo;
+package busqueda.jxta.chat;
 
 import busqueda.jxta.UtilidadesJXTA;
 import java.io.IOException;
@@ -17,9 +17,9 @@ import net.jxta.protocol.PipeAdvertisement;
  *
  * @author almunoz
  */
-public class ChatServidorNuevo {
+public class ChatServidor {
     // Peer
-    private ChatNuevo chat;
+    private Chat chat;
     // Advertisement
     private PipeAdvertisement inputPipeAdvertisement;
     // Canal de Comunicacion (InputPipe)
@@ -27,12 +27,12 @@ public class ChatServidorNuevo {
     // La lista de clientes, Canales de Comunicacion (OutputPipes)
     private Vector<OutputPipe> clientes;
     
-    public ChatServidorNuevo(ChatNuevo chat) {
+    public ChatServidor(Chat chat) {
         this.chat = chat;
-        this.inputPipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(ChatNuevo.grupoChat, ChatNuevo.NOMBRE_SERVIDOR, ChatNuevo.DESCRIPCION_SERVIDOR);
+        this.inputPipeAdvertisement = UtilidadesJXTA.crearPipeAdvertisement(Chat.grupoChat, Chat.NOMBRE_SERVIDOR, Chat.DESCRIPCION_SERVIDOR);
         PipeInputListener listener = new PipeInputListener();
-        this.inputPipe = UtilidadesJXTA.crearInputPipe(ChatNuevo.grupoChat, inputPipeAdvertisement, listener);
-        UtilidadesJXTA.publicarAdvertisement(ChatNuevo.grupoChat, inputPipeAdvertisement);
+        this.inputPipe = UtilidadesJXTA.crearInputPipe(Chat.grupoChat, inputPipeAdvertisement, listener);
+        UtilidadesJXTA.publicarAdvertisement(Chat.grupoChat, inputPipeAdvertisement);
         this.clientes = new Vector<OutputPipe>(0, 10);
     }
 
@@ -48,7 +48,7 @@ public class ChatServidorNuevo {
             inputPipe.close();
         }
         if (inputPipeAdvertisement != null) {
-            UtilidadesJXTA.eliminarAdvertisement(ChatNuevo.grupoChat, inputPipeAdvertisement);
+            UtilidadesJXTA.eliminarAdvertisement(Chat.grupoChat, inputPipeAdvertisement);
         }
         for (OutputPipe outputPipe : clientes) {
             if (outputPipe != null) {
@@ -89,7 +89,7 @@ public class ChatServidorNuevo {
             }
         }
         if (!encontrado) {
-            OutputPipe cliente = UtilidadesJXTA.crearOuputPipe(ChatNuevo.grupoChat, advertisement);
+            OutputPipe cliente = UtilidadesJXTA.crearOuputPipe(Chat.grupoChat, advertisement);
             clientes.addElement(cliente);
             chat.mostrarMensajeChat("Servidor", "El cliente '" + advertisement.getName() + "' se ha conectado.");
             chat.mostrarMensajeChat("Servidor", "El ID del cliente es: " + advertisement.getID().toString() + "\n");
